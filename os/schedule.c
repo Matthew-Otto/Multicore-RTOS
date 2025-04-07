@@ -1,19 +1,27 @@
 #include <stdint.h>
+#include "../inc/rp2040.h"
 
 // initialize cpu1
 // initialize systick timer
 // enable interrupts
-void init_scheduler(void) {
+void init_scheduler(uint32_t timeslice) {
+    // intialize cpu1
+    // TODO
 
+    // initialize systick timer
+    #define CLK_RATE 12000000 // 12MHz XOSC
+    SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
+    SYST_CSR |= 1 << 2; // use processor clock
+    SYST_CSR |= 1 << 1; // enable systick interrupts
+    SYST_CSR |= 1;      // enable systick timer
+
+    // enable interrupts
+    // TODO
 }
 
-// triggers a pendsv
+// triggers a pendsv interrupt
 void context_switch(void) {
-__asm(
-    "LDR     R0, =NVIC_INT_CTRL   \n" // Load address of the ICSR register
-    "MOV     R1, #NVIC_PENDSVSET  \n" // Set the PENDSVSET bit in R1
-    "STR     R1, [R0]             \n" // Write R1 to ICSR register
-);
+    ICSR = 1 << PENDSVSET_OFFSET;
 }
 
 // systick interrupt service routine
@@ -24,6 +32,8 @@ void systick_handler(void) {
 // schedules next task
 void schedule(void) {
 
+    // ...
+    context_switch();
 }
 
 // add new thread to schedule

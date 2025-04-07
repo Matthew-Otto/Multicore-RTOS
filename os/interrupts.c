@@ -22,10 +22,10 @@ __attribute__( ( used, section( ".vectors" ) ) ) void ( *vectors[] )( void ) =
     default_isr,      // 11 SVCall
     0,                // 12 reserved
     0,                // 13 reserved
-    default_isr,      // 14 pendSV
+    pendSV_handler,   // 14 pendSV
     systick_handler,  // 15 sysTick
 };
 
-void default_isr(void){
+void default_isr(void) {
     while ( 1 );
 }

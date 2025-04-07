@@ -1,9 +1,23 @@
 #include <stdint.h>
 
+typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD} ThreadState;
+
+typedef struct TCB TCB_t;
+struct TCB {
+  uint32_t *sp;
+  TCB_t *next_tcb;
+  TCB_t *prev_tcb;
+  uint8_t id;
+  ThreadState state;
+  uint32_t resume_tick;
+  uint8_t priority;
+  uint32_t *stack;
+};
+
 // initialize cpu1
 // initialize systick timer
 // enable interrupts
-void init_scheduler(void);
+void init_scheduler(uint32_t timeslice);
 
 // triggers a pendsv
 void context_switch(void);
