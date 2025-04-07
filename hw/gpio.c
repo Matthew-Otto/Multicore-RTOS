@@ -9,9 +9,9 @@ void init_gpio(int pin) {
 }
 
 void gpio_set(int pin) {
-    GPIO_GPSET0 = 1 << pin;
+    //GPIO_GPSET0 = 1 << pin;
 }
 
 void gpio_clear(int pin) {
-    GPIO_GPCLR0 = 1 << pin;
+    //GPIO_GPCLR0 = 1 << pin;
 }

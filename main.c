@@ -14,7 +14,7 @@ int main(void) {
 
 
     // initialize scheduler (starts OS, never returns)
-    init_scheduler();
+    init_scheduler(500); // 500ms timeslice
 
     for (;;) {}
 }

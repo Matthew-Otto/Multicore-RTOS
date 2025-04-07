@@ -14,6 +14,6 @@ struct FIFO {
 typedef struct FIFO FIFO_t;
 
 FIFO_t *spsc_fifo_init(uint32_t size);
-void spsc_fifo_put(FIFO_t *fifo, uint32_t data);
+uint32_t spsc_fifo_put(FIFO_t *fifo, uint32_t data);
 uint32_t spsc_fifo_get(FIFO_t *fifo);
 uint32_t spsc_fifo_size(FIFO_t *fifo);

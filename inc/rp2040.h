@@ -147,7 +147,7 @@
 #define DORMANT_WAKE_INTS3              (*((volatile uint32_t *)(IO_BANK0_BASE+0x18c))) // Interrupt status after masking & forcing for dormant_wake
 
 // SIO
-#define CPUID                           (*((volatile uint32_t *)(SIO_BASE+0x000)))  // Processor core identifier
+#define SIO_CPUID                       (*((volatile uint32_t *)(SIO_BASE+0x000)))  // Processor core identifier
 #define GPIO_IN                         (*((volatile uint32_t *)(SIO_BASE+0x004)))  // Input value for GPIO pins
 #define GPIO_HI_IN                      (*((volatile uint32_t *)(SIO_BASE+0x008)))  // Input value for QSPI pins
 #define GPIO_OUT                        (*((volatile uint32_t *)(SIO_BASE+0x010)))  // GPIO output value
@@ -259,7 +259,7 @@
 #define NVIC_IPR5                       (*((volatile uint32_t *)(PPB_BASE+0xe414))) // Interrupt Priority Register 5
 #define NVIC_IPR6                       (*((volatile uint32_t *)(PPB_BASE+0xe418))) // Interrupt Priority Register 6
 #define NVIC_IPR7                       (*((volatile uint32_t *)(PPB_BASE+0xe41c))) // Interrupt Priority Register 7
-#define CPUID                           (*((volatile uint32_t *)(PPB_BASE+0xed00))) // CPUID Base Register
+#define CORE_CPUID                      (*((volatile uint32_t *)(PPB_BASE+0xed00))) // CPUID Base Register
 #define ICSR                            (*((volatile uint32_t *)(PPB_BASE+0xed04))) // Interrupt Control and State Register
 #define VTOR                            (*((volatile uint32_t *)(PPB_BASE+0xed08))) // Vector Table Offset Register
 #define AIRCR                           (*((volatile uint32_t *)(PPB_BASE+0xed0c))) // Application Interrupt and Reset Control Register

@@ -1,5 +1,11 @@
+#include <stdio.h>
 #include <stdint.h>
+#include "schedule.h"
 #include "../inc/rp2040.h"
+
+
+TCB_t *RunPt = NULL;
+TCB_t *NextRunPt = NULL;
 
 // initialize cpu1
 // initialize systick timer
@@ -26,7 +32,8 @@ void context_switch(void) {
 
 // systick interrupt service routine
 void systick_handler(void) {
-    schedule();
+    GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
+    //schedule(); BOZO
 }
 
 // schedules next task
