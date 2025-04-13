@@ -21,11 +21,14 @@ INC = -Iinc
 CPU     = cortex-m0plus
 ARMGNU  = arm-none-eabi
 AFLAGS  = --warn --fatal-warnings -mcpu=$(CPU) -g
-LDFLAGS = -Llib/ -lgcc --gc-sections -Map=$(BUILD)main.map --print-memory-usage
+LDFLAGS = -Llib/ -lc -lgcc --gc-sections -Map=$(BUILD)main.map --print-memory-usage
 CFLAGS  = -mcpu=$(CPU) -mthumb -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -Og
 PICOTOOL = /usr/local/bin
 
+
 # SRCS: all source files from src directory
+VPATH = . lib inc os hw
+H_SRCS = inc/rp2040.h lib/utils.h
 C_SRCS = $(wildcard *.c) $(wildcard inc/*.c) $(wildcard os/*.c) $(wildcard hw/*.c)
 S_SRCS = $(wildcard *.s) $(wildcard inc/*.s) $(wildcard os/*.s) $(wildcard hw/*.s)
 # OBJS: list of object files
@@ -33,7 +36,6 @@ C_OBJS = $(addprefix $(BUILD),$(notdir $(C_SRCS:.c=.o)))
 S_OBJS = $(addprefix $(BUILD),$(notdir $(S_SRCS:.s=.o)))
 OBJS = $(C_OBJS) $(S_OBJS)
 ASMS = $(addprefix $(BUILD),$(notdir $(C_SRCS:.c=.s)))
-
 
 
 
@@ -51,8 +53,7 @@ $(BUILD)main.elf: $(BUILD)boot2_patch.o $(OBJS)
 	$(OBJDUMP) -D $(BUILD)main.elf > $(BUILD)main.list
 
 # turn .c source files into object files
-vpath %.c $(CWD) inc os hw
-$(BUILD)%.o: %.c
+$(BUILD)%.o: %.c | $(H_SRCS)
 	$(MKDIR)
 	$(CC) -o $@ $^ $(INC) $(CFLAGS)
 
