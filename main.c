@@ -10,7 +10,6 @@
 
 void main(void) {
     // initialize system clock
-
     
     // reset subsys?
     PUT32(( RESETS_RESET | CLR ), ( 1 << 5 ) );
@@ -20,7 +19,7 @@ void main(void) {
     init_gpio(25);
 
     // initialize scheduler (starts OS, never returns)
-    init_scheduler(100); // 500ms timeslice
+    init_scheduler(1000); // 500ms timeslice
 
     for (;;) {}
 }

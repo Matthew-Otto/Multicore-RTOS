@@ -2,33 +2,30 @@ ENTRY(reset_handler)
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x10000000, LENGTH = 2M
-  SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 255k
+  FLASH (rx) : ORIGIN = 0x10000000, LENGTH = 16M
+  SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 256k
 }
 
 SECTIONS
 {
   .boot2 :
   {
-      __boot2_start__ = .;
+      _sboot2 = .;
       KEEP(*(.boot2))
-      __boot2_end__ = .;
+      _eboot2 = .;
   } > FLASH
 
-  .vectors : {
-    KEEP(*(.vectors))
-  } > SRAM AT > FLASH
-
   .text : {
+    KEEP(*(.vectors))
     *(.text*)
     *(.rodata*)
-  } > SRAM AT > FLASH
+  } > FLASH
 
   .data : {
     _sdata = .;
     *(.data*)
     _edata = .;
-  } > SRAM
+  } > SRAM AT > FLASH
 
   _sidata = LOADADDR(.data);
 
@@ -40,9 +37,9 @@ SECTIONS
   } > SRAM
 
   .stack (COPY) : {
-    __stack_top = ORIGIN(SRAM) + LENGTH(SRAM);
+    __stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 4;
   }
 
-  ASSERT(__boot2_end__ - __boot2_start__ == 256,
+  ASSERT(_eboot2 - _sboot2 == 256,
     "ERROR: Pico second stage bootloader must be 256 bytes in size")
 }

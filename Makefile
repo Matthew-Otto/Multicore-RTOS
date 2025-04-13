@@ -21,8 +21,8 @@ INC = -Iinc
 CPU     = cortex-m0plus
 ARMGNU  = arm-none-eabi
 AFLAGS  = --warn --fatal-warnings -mcpu=$(CPU) -g
-LDFLAGS = -Llib/ -lgcc
-CFLAGS  = -mcpu=$(CPU) -mthumb -nostartfiles -ffreestanding -fpic -nostdlib -g -c -ggdb -std=c99 -Og
+LDFLAGS = -Llib/ -lgcc --gc-sections -Map=$(BUILD)main.map --print-memory-usage
+CFLAGS  = -mcpu=$(CPU) -mthumb -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -Og
 PICOTOOL = /usr/local/bin
 
 # SRCS: all source files from src directory
