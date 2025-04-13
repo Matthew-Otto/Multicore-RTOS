@@ -13,14 +13,14 @@ pendSV_handler:
     PUSH {R4-R7}
     LDR R0, =RunPt
     LDR R1, [R0]
-    MRS R3, PSP
+    MRS R3, MSP
     STR R3, [R1]        // store SP
 
     LDR R2, =NextRunPt
     LDR R1, [R2]        // load next TCB pointer
     STR R1, [R0]        // update RunPt
     LDR R3, [R1]        // load SP
-    MSR PSP, R3
+    MSR MSP, R3
     POP {R4-R7}
     CPSIE I
     BX LR
