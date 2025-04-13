@@ -37,6 +37,16 @@
 #define SIO_BASE                    0xd0000000
 #define PPB_BASE                    0xe0000000
 
+#define XIP_BASE                    0x10000000
+#define XIP_NOALLOC_BASE            0x11000000
+#define XIP_NOCACHE_BASE            0x12000000
+#define XIP_NOCACHE_NOALLOC_BASE    0x13000000
+#define XIP_CTRL_BASE               0x14000000
+#define XIP_SRAM_BASE               0x15000000
+#define XIP_SRAM_END                0x15004000
+#define XIP_SSI_BASE                0x18000000
+
+
 // System Config
 #define PROC0_NMI_MASK                  (*((volatile uint32_t *)(SYSCFG_BASE)))
 #define PROC1_NMI_MASK                  (*((volatile uint32_t *)(SYSCFG_BASE+0x04)))
@@ -273,6 +283,36 @@
 #define MPU_RNR                         (*((volatile uint32_t *)(PPB_BASE+0xed98))) // MPU Region Number Register
 #define MPU_RBAR                        (*((volatile uint32_t *)(PPB_BASE+0xed9c))) // MPU Region Base Address Register
 #define MPU_RASR                        (*((volatile uint32_t *)(PPB_BASE+0xeda0))) // MPU Region Attribute and Size Register
+
+// XIP_SSI
+#define CTRLR0                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x00))) // Control register 0
+#define CTRLR1                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x04))) // Master Control register 1
+#define SSIENR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x08))) // SSI Enable
+#define MWCR                            (*((volatile uint32_t *)(XIP_SSI_BASE+0x0c))) // Microwire Control
+#define SER                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x10))) // Slave enable
+#define BAUDR                           (*((volatile uint32_t *)(XIP_SSI_BASE+0x14))) // Baud rate
+#define TXFTLR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x18))) // TX FIFO threshold level
+#define RXFTLR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x1c))) // RX FIFO threshold level
+#define TXFLR                           (*((volatile uint32_t *)(XIP_SSI_BASE+0x20))) // TX FIFO level
+#define RXFLR                           (*((volatile uint32_t *)(XIP_SSI_BASE+0x24))) // RX FIFO level
+#define SR                              (*((volatile uint32_t *)(XIP_SSI_BASE+0x28))) // Status register
+#define IMR                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x2c))) // Interrupt mask
+#define ISR                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x30))) // Interrupt status
+#define RISR                            (*((volatile uint32_t *)(XIP_SSI_BASE+0x34))) // Raw interrupt status
+#define TXOICR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x38))) // TX FIFO overflow interrupt clear
+#define RXOICR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x3c))) // RX FIFO overflow interrupt clear
+#define RXUICR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x40))) // RX FIFO underflow interrupt clear
+#define MSTICR                          (*((volatile uint32_t *)(XIP_SSI_BASE+0x44))) // Multi-master interrupt clear
+#define ICR                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x48))) // Interrupt clear
+#define DMACR                           (*((volatile uint32_t *)(XIP_SSI_BASE+0x4c))) // DMA control
+#define DMATDLR                         (*((volatile uint32_t *)(XIP_SSI_BASE+0x50))) // DMA TX data level
+#define DMARDLR                         (*((volatile uint32_t *)(XIP_SSI_BASE+0x54))) // DMA RX data level
+#define IDR                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x58))) // Identification register
+#define SSI_VERSION_ID                  (*((volatile uint32_t *)(XIP_SSI_BASE+0x5c))) // Version ID
+#define DR0                             (*((volatile uint32_t *)(XIP_SSI_BASE+0x60))) // Data Register 0 (of 36)
+#define RX_SAMPLE_DLY                   (*((volatile uint32_t *)(XIP_SSI_BASE+0xf0))) // RX sample delay
+#define SPI_CTRLR0                      (*((volatile uint32_t *)(XIP_SSI_BASE+0xf4))) // SPI control
+#define TXD_DRIVE_EDGE                  (*((volatile uint32_t *)(XIP_SSI_BASE+0xf8))) // TX drive edge
 
 // ICSR offsets
 #define NMIPENDSET_OFFSET     31

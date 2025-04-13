@@ -11,7 +11,8 @@ OBJDUMP = arm-none-eabi-objdump
 RM      = rm -rf
 MKDIR   = @mkdir -p $(@D) #creates folders if not present
 
-DEBUG_INTERFACE = interface/ftdi/ft232h-module-swd.cfg
+DEBUG_INTERFACE = interface/cmsis-dap.cfg
+#DEBUG_INTERFACE = interface/ftdi/ft232h-module-swd.cfg
 DEBUG_TARGET = target/rp2040.cfg
 
 #Flag points to the INC folder containing header files
@@ -36,7 +37,7 @@ ASMS = $(addprefix $(BUILD),$(notdir $(C_SRCS:.c=.s)))
 
 
 
-all: $(BUILD)main.elf
+all: $(BUILD)main.bin
 
 uf2: $(BUILD)main.bin
 	picotool uf2 convert $(BUILD)main.bin $(BUILD)main.uf2 -o 0x10000000 --family rp2040
@@ -46,7 +47,7 @@ $(BUILD)main.bin: $(BUILD)main.elf
 
 $(BUILD)main.elf: $(BUILD)boot2_patch.o $(OBJS)
 	$(MKDIR)
-	$(LD) -T memmap.ld -o $@ $^ $(LDFLAGS)
+	$(LD) -T linker.ld -o $@ $^ $(LDFLAGS)
 	$(OBJDUMP) -D $(BUILD)main.elf > $(BUILD)main.list
 
 # turn .c source files into object files
@@ -62,21 +63,25 @@ $(BUILD)%.o: %.s
 	$(MKDIR)              
 	$(AS) -o $@ $^ $(INC) $(AFLAGS)
 
-
 # build bootloader code
-$(BUILD)boot2.bin : $(BOOTLOADER)boot2.s $(BOOTLOADER)memmap_boot2.ld
-	$(MKDIR)
-	$(AS) $(AFLAGS) $(BOOTLOADER)boot2.s -o $(BUILD)boot2.o
-	$(LD) -T $(BOOTLOADER)memmap_boot2.ld $(BUILD)boot2.o -o $(BUILD)boot2.elf $(LDFLAGS)
-	$(OBJCOPY) -O binary $(BUILD)boot2.elf $(BUILD)boot2.bin
-
 $(BUILD)boot2_patch.o : $(BUILD)boot2.bin
 	$(BOOTLOADER)pad_checksum -p 256 -s 0xFFFFFFFF $(BUILD)boot2.bin $(BUILD)boot2_patch.s
 	$(AS) $(AFLAGS) $(BUILD)boot2_patch.s -o $(BUILD)boot2_patch.o
 
+$(BUILD)boot2.bin : $(BOOTLOADER)boot2.c
+	$(MKDIR)
+	$(CC) -nostdlib -mcpu=cortex-m0plus -mthumb -g -O1 $(BOOTLOADER)boot2.c -o $(BUILD)boot2.o
+	$(ARMGNU)-objcopy -O binary $(BUILD)boot2.o $(BUILD)boot2.bin
+
 
 flash: $(BUILD)main.elf
-	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 20000" -c "init" -c "reset halt" -c "program $(BUILD)main.elf 0x0 reset exit"
+	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "program $(BUILD)main.elf reset exit"
+
+debug: $(BUILD)main.elf
+	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000"
+
+reset:
+	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "init; reset run; exit"
 
 clean:
 	rm -rf build
