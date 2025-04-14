@@ -15,7 +15,7 @@ void init_scheduler(uint32_t timeslice) {
     // TODO
 
     // initialize systick timer
-    #define CLK_RATE 12000000 // 12MHz XOSC
+    #define CLK_RATE 133000000 // 133Mhz
     SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
     SYST_CSR |= 1 << 2; // use processor clock
     SYST_CSR |= 1 << 1; // enable systick interrupts

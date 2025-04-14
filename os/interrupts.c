@@ -1,8 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../inc/rp2040.h"
-#include "../hw/clock.h"
+#include "../hw/sys.h"
 #include "../hw/gpio.h"
+#include "heap.h"
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DELAY(cycles) {int count = cycles; while (count--) __asm ("nop");}
@@ -67,6 +68,9 @@ __attribute__((naked)) void reset_handler(void) {
     // TODO: reset vector table offset?
     //VTOR = (uint32_t)vector_table;
     // TODO: reset stack pointer?
+
+    // initialize heap
+    heap_init();
 
     // jump to main
     main();

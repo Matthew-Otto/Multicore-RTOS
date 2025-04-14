@@ -1,4 +1,8 @@
+#ifndef SCHEDULE_H
+#define SCHEDULE_H
+
 #include <stdint.h>
+#include "heap.h"
 
 typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD} ThreadState;
 
@@ -39,3 +43,5 @@ void sleep(uint32_t sleep_time);
 
 // removes thread from schedule and frees memory
 void kill(void);
+
+#endif // SCHEDULE_H

@@ -28,7 +28,7 @@ PICOTOOL = /usr/local/bin
 
 # SRCS: all source files from src directory
 VPATH = . lib inc os hw
-H_SRCS = inc/rp2040.h lib/utils.h
+H_SRCS = inc/rp2040.h lib/utils.h hw/hwint.h
 C_SRCS = $(wildcard *.c) $(wildcard inc/*.c) $(wildcard os/*.c) $(wildcard hw/*.c)
 S_SRCS = $(wildcard *.s) $(wildcard inc/*.s) $(wildcard os/*.s) $(wildcard hw/*.s)
 # OBJS: list of object files
