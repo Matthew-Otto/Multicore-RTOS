@@ -11,6 +11,9 @@
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DELAY(cycles) {int count = cycles; while (count--) __asm ("nop");}
 
+extern volatile TCB_t *RunPt;
+extern volatile TCB_t *NextRunPt;
+
 extern uint32_t __stack_top;
 extern uint32_t _sidata;
 extern uint32_t _sdata;
@@ -75,6 +78,9 @@ __attribute__((naked)) void reset_handler(void) {
     // initialize heap
     heap_init();
 
+    // bozo debug
+    //SPINLOCK0 = 1;
+
     // jump to main
     main();
 }
@@ -104,30 +110,67 @@ void hardfault_handler(void) {
     }
 }
 
-void pendSV_handler(void) {
-    __asm volatile (
-        "CPSID I\n"
-        "PUSH {R4-R7}\n"
-        "LDR R1, [%0]\n" // get RunPt
-        "MRS R3, MSP\n"
-        "STR R3, [R1]\n" // store SP
+// When pushing context to the stack, the hardware saves eight 32-bit words, comprising xPSR, ReturnAddress(), LR
+// (R14), R12, R3, R2, R1, and R0.
 
-        "LDR R1, [%1]\n" // load next TCB pointer
-        "STR R1, [%0]\n" // update RunPt
-        "LDR R3, [R1]\n" // load SP
-        "MSR MSP, R3\n"
-        "POP {R4-R7}\n"
-        "CPSIE I\n"
-        "BX LR\n"
-        :: "r" (get_RunPt()), "r" (get_NextRunPt())
+__attribute__((naked)) void pendSV_handler(void) {
+    __asm (
+        "CPSID  I\n"                // disable interrupts
+        "LDR    R1, =0xd0000000\n"  // get CPUID
+        "LDR    R1, [R1]\n"
+        "LSL    R1, R1, #2\n"       // convert CPUID into array offset
+        "LDR    R0, =RunPt\n"       // get address of run pointer
+        "ADD    R2, R0, R1\n"       // R2 = address of RunPT for current cpu
+        "LDR    R0, =NextRunPt\n"   // get address of next run pointer
+        "ADD    R3, R0, R1\n"       // R3 = address of NextRunPT for current cpu
+        // save context
+        "PUSH   {R4-R7}\n" 
+        "MOV    R1, R8\n"
+        "ADD    SP, SP, #-4\n"
+        "STR    R1, [SP]\n"
+        "MOV    R1, R9\n"
+        "ADD    SP, SP, #-4\n"
+        "STR    R1, [SP]\n"
+        "MOV    R1, R10\n"
+        "ADD    SP, SP, #-4\n"
+        "STR    R1, [SP]\n"
+        "MOV    R1, R11\n"
+        "ADD    SP, SP, #-4\n"
+        "STR    R1, [SP]\n"
+        //save old stack pointer
+        "MOV    R1, SP\n"
+        "LDR    R0, [R2]\n"
+        "STR    R1, [R0]\n"
+        // update RunPt with NextRunPt
+        "LDR    R0, [R3]\n"
+        "STR    R0, [R2]\n"
+        // load new SP
+        "LDR    R1, [R0]\n"
+        "MOV    SP, R1\n"
+        // restore context
+        "LDR    R1, [SP]\n"
+        "MOV    R1, R11\n"
+        "ADD    SP, SP, #4\n"
+        "LDR    R1, [SP]\n"
+        "MOV    R1, R10\n"
+        "ADD    SP, SP, #4\n"
+        "LDR    R1, [SP]\n"
+        "MOV    R1, R9\n"
+        "ADD    SP, SP, #4\n"
+        "LDR    R1, [SP]\n"
+        "MOV    R1, R8\n"
+        "ADD    SP, SP, #4\n"
+        "POP    {R4-R7}\n"
+
+        "CPSIE I\n"       // enable interrupts
+        "BX LR\n"         // branch to new task
     );
 }
 
 // systick interrupt service routine
 void systick_handler(void) {
-    //GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
-    GPIO_OUT_XOR = 1 << 2;
-    //schedule();
+    GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
+    schedule();
 }
 
 void default_isr(void) {

@@ -3,6 +3,8 @@
 #ifndef SYS_H
 #define SYS_H
 
+#include "../inc/rp2040.h"
+
 typedef enum {
     ADC = 0,
     BUSCTRL = 1,
@@ -38,6 +40,8 @@ void init_sysclock(void);
 void init_subsystem(subsystem_e sys);
 
 // returns the current processor id (0 or 1)
-uint8_t proc_id(void);
+static inline uint8_t proc_id(void) {
+    return SIO_CPUID;
+}
 
 #endif // SYS_H

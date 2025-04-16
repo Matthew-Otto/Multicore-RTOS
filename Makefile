@@ -38,10 +38,10 @@ ASMS = $(addprefix $(BUILD),$(notdir $(C_SRCS:.c=.s)))
 
 
 
-all: $(BUILD)main.bin
+all: $(BUILD)main.elf
 
-uf2: $(BUILD)main.bin
-	picotool uf2 convert $(BUILD)main.bin $(BUILD)main.uf2 -o 0x10000000 --family rp2040
+uf2: $(BUILD)main.elf
+	picotool uf2 convert $(BUILD)main.elf $(BUILD)main.uf2 --family rp2040
 
 $(BUILD)main.bin: $(BUILD)main.elf
 	$(OBJCOPY) -O binary $(BUILD)main.elf $(BUILD)main.bin
@@ -75,13 +75,13 @@ $(BUILD)boot2.bin : $(BOOTLOADER)boot2.c
 
 
 flash: $(BUILD)main.elf
-	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "program $(BUILD)main.elf reset exit"
+	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "program $(BUILD)main.elf reset; reset halt; rp2040.core1 arp_reset assert 0; rp2040.core0 arp_reset assert 0; exit"
 
 debug: $(BUILD)main.elf
 	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000"
 
 reset:
-	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "init; reset run; exit"
+	openocd -f $(DEBUG_INTERFACE) -f $(DEBUG_TARGET) -c "adapter speed 5000" -c "init; reset halt; rp2040.core1 arp_reset assert 0; rp2040.core0 arp_reset assert 0; exit"
 
 clean:
 	rm -rf build

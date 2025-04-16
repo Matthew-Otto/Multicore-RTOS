@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "heap.h"
+#include "../hw/sys.h"
 
 typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD} ThreadState;
 
@@ -38,9 +39,5 @@ void sleep(uint32_t sleep_time);
 
 // removes thread from schedule and frees memory
 void kill(void);
-
-uint32_t get_RunPt(void);
-
-uint32_t get_NextRunPt(void);
 
 #endif // SCHEDULE_H

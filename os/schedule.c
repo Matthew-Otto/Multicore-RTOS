@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "schedule.h"
 #include "../inc/rp2040.h"
-#include "../hw/sys.h"
 #include "../hw/hwctrl.h"
 #include "semaphore.h"
 
@@ -10,8 +9,8 @@
 extern void (*vector_table[])(void);
 
 #define NUM_CORES 2
-static volatile TCB_t *RunPt[NUM_CORES] = {NULL};
-static volatile TCB_t *NextRunPt[NUM_CORES] = {NULL};
+volatile TCB_t *RunPt[NUM_CORES] = {NULL};
+volatile TCB_t *NextRunPt[NUM_CORES] = {NULL};
 
 // Memory shared by both cores. must be accesses with mutex
 static uint32_t LifetimeThreadCount = 0;
@@ -25,8 +24,8 @@ static void core1_entry(void) {
     //init_scheduler(timeslice, false);
 
     while (1) {
-        for (int i = 0; i < 2500000; i++) {};
-        GPIO_OUT_XOR = 1 << 25;
+        for (int i = 0; i < 10000000; i++) {};
+        //GPIO_OUT_XOR = 1 << 25;
     }
 }
 
@@ -50,9 +49,8 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         } while (idx < 6);
 
         // send timeslice to cpu1
-        //multicore_fifo_push_blocking(timeslice);
+        multicore_fifo_push_blocking(timeslice);
     }
-    while(1);
 
     // initialize systick timer
     #define CLK_RATE 133000000 // 133Mhz
@@ -73,19 +71,14 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
     sched_release();
 
     // launch first task
-    __asm volatile (
-        "LDR     R1, [%0]\n"    // R1 = value of RunPt
-        "LDR     R1, [R1]\n"    // SP is the first element in the TCB
-        "MSR     MSP, R1\n"     // load SP
-        "ADD     SP,SP,#4\n"    // discard LR from initial stack
-        "LDR     R1, [SP]\n"    // load initial function pointer into LR (from PC idx)
-        "MOV     LR, R1\n"
-        "ADD     SP,SP,#8\n"    // discard PSR
-        
-        "CPSIE   I\n"           // enable interrupts
-        "BX      LR\n"          // start first thread
-        :: "r" (RunPt[cpu])
-    );
+    __asm ("LDR     R0, [%0]":: "r" (RunPt[cpu])); // Load @ RunPt to get SP
+    __asm ("MOV     SP, R0");      // load SP
+    __asm ("ADD     SP, SP, #56"); // Advance stack pointer to PC
+    __asm ("LDR     R1, [SP]");    // load initial function pointer into LR from stack
+    __asm ("ADD     SP, SP, #4");  // poor man's pop
+    __asm ("MOV     LR, R1");
+    __asm ("CPSIE   I");           // enable interrupts
+    __asm ("BX      LR");          // branch to first thread
 }
 
 // schedules next task
@@ -143,10 +136,10 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     newtcb->stack = stack;
 
     // initialize thread stack
-    newtcb->stack[stack_size-4] = 0x01000000;     // PSR (set thumb bit)
-    newtcb->stack[stack_size-8] = (uint32_t)task; // PC (function pointer)
+    newtcb->stack[stack_size-1] = 0x01000000;     // PSR
+    newtcb->stack[stack_size-2] = (uint32_t)task; // PC (function pointer)
     newtcb->stack[0] = 0xDEADBEEF;                // magic value for stack overflow detection
-    newtcb->sp = &newtcb->stack[stack_size-8];    // set thread SP
+    newtcb->sp = &newtcb->stack[stack_size-16];    // set thread SP
 
     // add thread to schedule
     if (ThreadSchedule[priority] == NULL) {
@@ -184,12 +177,4 @@ void sleep(uint32_t sleep_time) {
 // removes thread from schedule and frees memory
 void kill(void) {
 
-}
-
-uint32_t get_RunPt(void) {
-    return (uint32_t)RunPt[proc_id()];
-}
-
-uint32_t get_NextRunPt(void) {
-    return (uint32_t)NextRunPt[proc_id()];
 }

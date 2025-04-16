@@ -37,7 +37,3 @@ void init_subsystem(subsystem_e sys) {
     RESET_CLR = (1U << sys); // pull subsystem out of reset
     while (!(RESET_DONE & (1U << sys))); // wait for subsystem to complete reset
 }
-
-uint8_t proc_id(void) {
-    return SIO_CPUID;
-}
