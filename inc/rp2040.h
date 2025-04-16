@@ -3,6 +3,12 @@
 #ifndef __RP2040__
 #define __RP2040__
 
+// 4kb SRAM banks for CPU Stacks
+#define CPU0_STACK_BASE             0x20040000
+#define CPU0_STACK_TOP              0x20040FFC
+#define CPU1_STACK_BASE             0x20041000
+#define CPU1_STACK_TOP              0x20041FFC
+
 // platform register categories
 #define SYSINFO_BASE                0x40000000
 #define SYSCFG_BASE                 0x40004000
@@ -113,135 +119,210 @@
 #define WDSEL_SET                       (*((volatile uint32_t *)(RESETS_BASE+0x2004))) // Watchdog select.
 #define WDSEL_CLR                       (*((volatile uint32_t *)(RESETS_BASE+0x3004))) // Watchdog select.
 #define RESET_DONE                      (*((volatile uint32_t *)(RESETS_BASE+0x8))) // Reset done.
-// RESET BITS
-#define RESET_USBCTRL_BIT               (1U << 24)
-#define RESET_UART1_BIT                 (1U << 23)
-#define RESET_UART0_BIT                 (1U << 22)
-#define RESET_TIMER_BIT                 (1U << 21)
-#define RESET_TBMAN_BIT                 (1U << 20)
-#define RESET_SYSINFO_BIT               (1U << 19)
-#define RESET_SYSCFG_BIT                (1U << 18)
-#define RESET_SPI1_BIT                  (1U << 17)
-#define RESET_SPI0_BIT                  (1U << 16)
-#define RESET_RTC_BIT                   (1U << 15)
-#define RESET_PWM_BIT                   (1U << 14)
-#define RESET_PLL_USB_BIT               (1U << 13)
-#define RESET_PLL_SYS_BIT               (1U << 12)
-#define RESET_PIO1_BIT                  (1U << 11)
-#define RESET_PIO0_BIT                  (1U << 10)
-#define RESET_PADS_QSPI_BIT             (1U << 9)
-#define RESET_PADS_BANK0_BIT            (1U << 8)
-#define RESET_JTAG_BIT                  (1U << 7)
-#define RESET_IO_QSPI_BIT               (1U << 6)
-#define RESET_IO_BANK0_BIT              (1U << 5)
-#define RESET_I2C1_BIT                  (1U << 4)
-#define RESET_I2C0_BIT                  (1U << 3)
-#define RESET_DMA_BIT                   (1U << 2)
-#define RESET_BUSCTRL_BIT               (1U << 1)
-#define RESET_ADC_BIT                   (1U << 0)
-
 
 // GPIO
-#define GPIO0_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x000))) // GPIO status
-#define GPIO0_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x004))) // GPIO control including function select and overrides.
-#define GPIO1_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x008))) // GPIO status
-#define GPIO1_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x00c))) // GPIO control including function select and overrides.
-#define GPIO2_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x010))) // GPIO status
-#define GPIO2_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x014))) // GPIO control including function select and overrides.
-#define GPIO3_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x018))) // GPIO status
-#define GPIO3_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x01c))) // GPIO control including function select and overrides.
-#define GPIO4_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x020))) // GPIO status
-#define GPIO4_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x024))) // GPIO control including function select and overrides.
-#define GPIO5_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x028))) // GPIO status
-#define GPIO5_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x02c))) // GPIO control including function select and overrides.
-#define GPIO6_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x030))) // GPIO status
-#define GPIO6_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x034))) // GPIO control including function select and overrides.
-#define GPIO7_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x038))) // GPIO status
-#define GPIO7_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x03c))) // GPIO control including function select and overrides.
-#define GPIO8_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x040))) // GPIO status
-#define GPIO8_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x044))) // GPIO control including function select and overrides.
-#define GPIO9_STATUS                    (*((volatile uint32_t *)(IO_BANK0_BASE+0x048))) // GPIO status
-#define GPIO9_CTRL                      (*((volatile uint32_t *)(IO_BANK0_BASE+0x04c))) // GPIO control including function select and overrides.
-#define GPIO10_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x050))) // GPIO status
-#define GPIO10_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x054))) // GPIO control including function select and overrides.
-#define GPIO11_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x058))) // GPIO status
-#define GPIO11_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x05c))) // GPIO control including function select and overrides.
-#define GPIO12_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x060))) // GPIO status
-#define GPIO12_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x064))) // GPIO control including function select and overrides.
-#define GPIO13_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x068))) // GPIO status
-#define GPIO13_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x06c))) // GPIO control including function select and overrides.
-#define GPIO14_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x070))) // GPIO status
-#define GPIO14_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x074))) // GPIO control including function select and overrides.
-#define GPIO15_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x078))) // GPIO status
-#define GPIO15_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x07c))) // GPIO control including function select and overrides.
-#define GPIO16_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x080))) // GPIO status
-#define GPIO16_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x084))) // GPIO control including function select and overrides.
-#define GPIO17_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x088))) // GPIO status
-#define GPIO17_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x08c))) // GPIO control including function select and overrides.
-#define GPIO18_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x090))) // GPIO status
-#define GPIO18_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x094))) // GPIO control including function select and overrides.
-#define GPIO19_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x098))) // GPIO status
-#define GPIO19_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x09c))) // GPIO control including function select and overrides.
-#define GPIO20_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a0))) // GPIO status
-#define GPIO20_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a4))) // GPIO control including function select and overrides.
-#define GPIO21_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a8))) // GPIO status
-#define GPIO21_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0ac))) // GPIO control including function select and overrides.
-#define GPIO22_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b0))) // GPIO status
-#define GPIO22_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b4))) // GPIO control including function select and overrides.
-#define GPIO23_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b8))) // GPIO status
-#define GPIO23_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0bc))) // GPIO control including function select and overrides.
-#define GPIO24_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c0))) // GPIO status
-#define GPIO24_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c4))) // GPIO control including function select and overrides.
-#define GPIO25_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c8))) // GPIO status
-#define GPIO25_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0cc))) // GPIO control including function select and overrides.
-#define GPIO26_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d0))) // GPIO status
-#define GPIO26_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d4))) // GPIO control including function select and overrides.
-#define GPIO27_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d8))) // GPIO status
-#define GPIO27_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0dc))) // GPIO control including function select and overrides.
-#define GPIO28_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e0))) // GPIO status
-#define GPIO28_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e4))) // GPIO control including function select and overrides.
-#define GPIO29_STATUS                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e8))) // GPIO status
-#define GPIO29_CTRL                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x0ec))) // GPIO control including function select and overrides.
-#define INTR0                           (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f0))) // Raw Interrupts
-#define INTR1                           (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f4))) // Raw Interrupts
-#define INTR2                           (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f8))) // Raw Interrupts
-#define INTR3                           (*((volatile uint32_t *)(IO_BANK0_BASE+0x0fc))) // Raw Interrupts
-#define PROC0_INTE0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x100))) // Interrupt Enable for proc0
-#define PROC0_INTE1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x104))) // Interrupt Enable for proc0
-#define PROC0_INTE2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x108))) // Interrupt Enable for proc0
-#define PROC0_INTE3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x10c))) // Interrupt Enable for proc0
-#define PROC0_INTF0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x110))) // Interrupt Force for proc0
-#define PROC0_INTF1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x114))) // Interrupt Force for proc0
-#define PROC0_INTF2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x118))) // Interrupt Force for proc0
-#define PROC0_INTF3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x11c))) // Interrupt Force for proc0
-#define PROC0_INTS0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x120))) // Interrupt status after masking & forcing for proc0
-#define PROC0_INTS1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x124))) // Interrupt status after masking & forcing for proc0
-#define PROC0_INTS2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x128))) // Interrupt status after masking & forcing for proc0
-#define PROC0_INTS3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x12c))) // Interrupt status after masking & forcing for proc0
-#define PROC1_INTE0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x130))) // Interrupt Enable for proc1
-#define PROC1_INTE1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x134))) // Interrupt Enable for proc1
-#define PROC1_INTE2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x138))) // Interrupt Enable for proc1
-#define PROC1_INTE3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x13c))) // Interrupt Enable for proc1
-#define PROC1_INTF0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x140))) // Interrupt Force for proc1
-#define PROC1_INTF1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x144))) // Interrupt Force for proc1
-#define PROC1_INTF2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x148))) // Interrupt Force for proc1
-#define PROC1_INTF3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x14c))) // Interrupt Force for proc1
-#define PROC1_INTS0                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x150))) // Interrupt status after masking & forcing for proc1
-#define PROC1_INTS1                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x154))) // Interrupt status after masking & forcing for proc1
-#define PROC1_INTS2                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x158))) // Interrupt status after masking & forcing for proc1
-#define PROC1_INTS3                     (*((volatile uint32_t *)(IO_BANK0_BASE+0x15c))) // Interrupt status after masking & forcing for proc1
-#define DORMANT_WAKE_INTE0              (*((volatile uint32_t *)(IO_BANK0_BASE+0x160))) // Interrupt Enable for dormant_wake
-#define DORMANT_WAKE_INTE1              (*((volatile uint32_t *)(IO_BANK0_BASE+0x164))) // Interrupt Enable for dormant_wake
-#define DORMANT_WAKE_INTE2              (*((volatile uint32_t *)(IO_BANK0_BASE+0x168))) // Interrupt Enable for dormant_wake
-#define DORMANT_WAKE_INTE3              (*((volatile uint32_t *)(IO_BANK0_BASE+0x16c))) // Interrupt Enable for dormant_wake
-#define DORMANT_WAKE_INTF0              (*((volatile uint32_t *)(IO_BANK0_BASE+0x170))) // Interrupt Force for dormant_wake
-#define DORMANT_WAKE_INTF1              (*((volatile uint32_t *)(IO_BANK0_BASE+0x174))) // Interrupt Force for dormant_wake
-#define DORMANT_WAKE_INTF2              (*((volatile uint32_t *)(IO_BANK0_BASE+0x178))) // Interrupt Force for dormant_wake
-#define DORMANT_WAKE_INTF3              (*((volatile uint32_t *)(IO_BANK0_BASE+0x17c))) // Interrupt Force for dormant_wake
-#define DORMANT_WAKE_INTS0              (*((volatile uint32_t *)(IO_BANK0_BASE+0x180))) // Interrupt status after masking & forcing for dormant_wake
-#define DORMANT_WAKE_INTS1              (*((volatile uint32_t *)(IO_BANK0_BASE+0x184))) // Interrupt status after masking & forcing for dormant_wake
-#define DORMANT_WAKE_INTS2              (*((volatile uint32_t *)(IO_BANK0_BASE+0x188))) // Interrupt status after masking & forcing for dormant_wake
-#define DORMANT_WAKE_INTS3              (*((volatile uint32_t *)(IO_BANK0_BASE+0x18c))) // Interrupt status after masking & forcing for dormant_wake
+#define IO_GPIO0_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x000))) // GPIO status
+#define IO_GPIO0_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x004))) // GPIO control including function select and overrides.
+#define IO_GPIO1_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x008))) // GPIO status
+#define IO_GPIO1_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x00c))) // GPIO control including function select and overrides.
+#define IO_GPIO2_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x010))) // GPIO status
+#define IO_GPIO2_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x014))) // GPIO control including function select and overrides.
+#define IO_GPIO3_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x018))) // GPIO status
+#define IO_GPIO3_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x01c))) // GPIO control including function select and overrides.
+#define IO_GPIO4_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x020))) // GPIO status
+#define IO_GPIO4_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x024))) // GPIO control including function select and overrides.
+#define IO_GPIO5_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x028))) // GPIO status
+#define IO_GPIO5_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x02c))) // GPIO control including function select and overrides.
+#define IO_GPIO6_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x030))) // GPIO status
+#define IO_GPIO6_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x034))) // GPIO control including function select and overrides.
+#define IO_GPIO7_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x038))) // GPIO status
+#define IO_GPIO7_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x03c))) // GPIO control including function select and overrides.
+#define IO_GPIO8_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x040))) // GPIO status
+#define IO_GPIO8_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x044))) // GPIO control including function select and overrides.
+#define IO_GPIO9_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x048))) // GPIO status
+#define IO_GPIO9_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x04c))) // GPIO control including function select and overrides.
+#define IO_GPIO10_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x050))) // GPIO status
+#define IO_GPIO10_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x054))) // GPIO control including function select and overrides.
+#define IO_GPIO11_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x058))) // GPIO status
+#define IO_GPIO11_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x05c))) // GPIO control including function select and overrides.
+#define IO_GPIO12_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x060))) // GPIO status
+#define IO_GPIO12_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x064))) // GPIO control including function select and overrides.
+#define IO_GPIO13_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x068))) // GPIO status
+#define IO_GPIO13_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x06c))) // GPIO control including function select and overrides.
+#define IO_GPIO14_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x070))) // GPIO status
+#define IO_GPIO14_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x074))) // GPIO control including function select and overrides.
+#define IO_GPIO15_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x078))) // GPIO status
+#define IO_GPIO15_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x07c))) // GPIO control including function select and overrides.
+#define IO_GPIO16_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x080))) // GPIO status
+#define IO_GPIO16_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x084))) // GPIO control including function select and overrides.
+#define IO_GPIO17_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x088))) // GPIO status
+#define IO_GPIO17_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x08c))) // GPIO control including function select and overrides.
+#define IO_GPIO18_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x090))) // GPIO status
+#define IO_GPIO18_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x094))) // GPIO control including function select and overrides.
+#define IO_GPIO19_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x098))) // GPIO status
+#define IO_GPIO19_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x09c))) // GPIO control including function select and overrides.
+#define IO_GPIO20_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a0))) // GPIO status
+#define IO_GPIO20_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a4))) // GPIO control including function select and overrides.
+#define IO_GPIO21_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0a8))) // GPIO status
+#define IO_GPIO21_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0ac))) // GPIO control including function select and overrides.
+#define IO_GPIO22_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b0))) // GPIO status
+#define IO_GPIO22_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b4))) // GPIO control including function select and overrides.
+#define IO_GPIO23_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0b8))) // GPIO status
+#define IO_GPIO23_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0bc))) // GPIO control including function select and overrides.
+#define IO_GPIO24_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c0))) // GPIO status
+#define IO_GPIO24_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c4))) // GPIO control including function select and overrides.
+#define IO_GPIO25_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0c8))) // GPIO status
+#define IO_GPIO25_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0cc))) // GPIO control including function select and overrides.
+#define IO_GPIO26_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d0))) // GPIO status
+#define IO_GPIO26_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d4))) // GPIO control including function select and overrides.
+#define IO_GPIO27_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0d8))) // GPIO status
+#define IO_GPIO27_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0dc))) // GPIO control including function select and overrides.
+#define IO_GPIO28_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e0))) // GPIO status
+#define IO_GPIO28_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e4))) // GPIO control including function select and overrides.
+#define IO_GPIO29_STATUS                (*((volatile uint32_t *)(IO_BANK0_BASE+0x0e8))) // GPIO status
+#define IO_GPIO29_CTRL                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x0ec))) // GPIO control including function select and overrides.
+#define IO_INTR0                        (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f0))) // Raw Interrupts
+#define IO_INTR1                        (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f4))) // Raw Interrupts
+#define IO_INTR2                        (*((volatile uint32_t *)(IO_BANK0_BASE+0x0f8))) // Raw Interrupts
+#define IO_INTR3                        (*((volatile uint32_t *)(IO_BANK0_BASE+0x0fc))) // Raw Interrupts
+#define IO_PROC0_INTE0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x100))) // Interrupt Enable for proc0
+#define IO_PROC0_INTE1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x104))) // Interrupt Enable for proc0
+#define IO_PROC0_INTE2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x108))) // Interrupt Enable for proc0
+#define IO_PROC0_INTE3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x10c))) // Interrupt Enable for proc0
+#define IO_PROC0_INTF0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x110))) // Interrupt Force for proc0
+#define IO_PROC0_INTF1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x114))) // Interrupt Force for proc0
+#define IO_PROC0_INTF2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x118))) // Interrupt Force for proc0
+#define IO_PROC0_INTF3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x11c))) // Interrupt Force for proc0
+#define IO_PROC0_INTS0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x120))) // Interrupt status after masking & forcing for proc0
+#define IO_PROC0_INTS1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x124))) // Interrupt status after masking & forcing for proc0
+#define IO_PROC0_INTS2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x128))) // Interrupt status after masking & forcing for proc0
+#define IO_PROC0_INTS3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x12c))) // Interrupt status after masking & forcing for proc0
+#define IO_PROC1_INTE0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x130))) // Interrupt Enable for proc1
+#define IO_PROC1_INTE1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x134))) // Interrupt Enable for proc1
+#define IO_PROC1_INTE2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x138))) // Interrupt Enable for proc1
+#define IO_PROC1_INTE3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x13c))) // Interrupt Enable for proc1
+#define IO_PROC1_INTF0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x140))) // Interrupt Force for proc1
+#define IO_PROC1_INTF1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x144))) // Interrupt Force for proc1
+#define IO_PROC1_INTF2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x148))) // Interrupt Force for proc1
+#define IO_PROC1_INTF3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x14c))) // Interrupt Force for proc1
+#define IO_PROC1_INTS0                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x150))) // Interrupt status after masking & forcing for proc1
+#define IO_PROC1_INTS1                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x154))) // Interrupt status after masking & forcing for proc1
+#define IO_PROC1_INTS2                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x158))) // Interrupt status after masking & forcing for proc1
+#define IO_PROC1_INTS3                  (*((volatile uint32_t *)(IO_BANK0_BASE+0x15c))) // Interrupt status after masking & forcing for proc1
+#define IO_DORMANT_WAKE_INTE0           (*((volatile uint32_t *)(IO_BANK0_BASE+0x160))) // Interrupt Enable for dormant_wake
+#define IO_DORMANT_WAKE_INTE1           (*((volatile uint32_t *)(IO_BANK0_BASE+0x164))) // Interrupt Enable for dormant_wake
+#define IO_DORMANT_WAKE_INTE2           (*((volatile uint32_t *)(IO_BANK0_BASE+0x168))) // Interrupt Enable for dormant_wake
+#define IO_DORMANT_WAKE_INTE3           (*((volatile uint32_t *)(IO_BANK0_BASE+0x16c))) // Interrupt Enable for dormant_wake
+#define IO_DORMANT_WAKE_INTF0           (*((volatile uint32_t *)(IO_BANK0_BASE+0x170))) // Interrupt Force for dormant_wake
+#define IO_DORMANT_WAKE_INTF1           (*((volatile uint32_t *)(IO_BANK0_BASE+0x174))) // Interrupt Force for dormant_wake
+#define IO_DORMANT_WAKE_INTF2           (*((volatile uint32_t *)(IO_BANK0_BASE+0x178))) // Interrupt Force for dormant_wake
+#define IO_DORMANT_WAKE_INTF3           (*((volatile uint32_t *)(IO_BANK0_BASE+0x17c))) // Interrupt Force for dormant_wake
+#define IO_DORMANT_WAKE_INTS0           (*((volatile uint32_t *)(IO_BANK0_BASE+0x180))) // Interrupt status after masking & forcing for dormant_wake
+#define IO_DORMANT_WAKE_INTS1           (*((volatile uint32_t *)(IO_BANK0_BASE+0x184))) // Interrupt status after masking & forcing for dormant_wake
+#define IO_DORMANT_WAKE_INTS2           (*((volatile uint32_t *)(IO_BANK0_BASE+0x188))) // Interrupt status after masking & forcing for dormant_wake
+#define IO_DORMANT_WAKE_INTS3           (*((volatile uint32_t *)(IO_BANK0_BASE+0x18c))) // Interrupt status after masking & forcing for dormant_wake
+
+// PADS_BANK0
+#define PADS_GPIO0_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x000))) GPIO status
+#define PADS_GPIO0_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x004))) GPIO control including function select and overrides.
+#define PADS_GPIO1_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x008))) GPIO status
+#define PADS_GPIO1_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x00c))) GPIO control including function select and overrides.
+#define PADS_GPIO2_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x010))) GPIO status
+#define PADS_GPIO2_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x014))) GPIO control including function select and overrides.
+#define PADS_GPIO3_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x018))) GPIO status
+#define PADS_GPIO3_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x01c))) GPIO control including function select and overrides.
+#define PADS_GPIO4_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x020))) GPIO status
+#define PADS_GPIO4_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x024))) GPIO control including function select and overrides.
+#define PADS_GPIO5_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x028))) GPIO status
+#define PADS_GPIO5_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x02c))) GPIO control including function select and overrides.
+#define PADS_GPIO6_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x030))) GPIO status
+#define PADS_GPIO6_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x034))) GPIO control including function select and overrides.
+#define PADS_GPIO7_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x038))) GPIO status
+#define PADS_GPIO7_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x03c))) GPIO control including function select and overrides.
+#define PADS_GPIO8_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x040))) GPIO status
+#define PADS_GPIO8_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x044))) GPIO control including function select and overrides.
+#define PADS_GPIO9_STATUS               (*((volatile uint32_t *)(PADS_BANK0_BASE+0x048))) GPIO status
+#define PADS_GPIO9_CTRL                 (*((volatile uint32_t *)(PADS_BANK0_BASE+0x04c))) GPIO control including function select and overrides.
+#define PADS_GPIO10_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x050))) GPIO status
+#define PADS_GPIO10_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x054))) GPIO control including function select and overrides.
+#define PADS_GPIO11_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x058))) GPIO status
+#define PADS_GPIO11_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x05c))) GPIO control including function select and overrides.
+#define PADS_GPIO12_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x060))) GPIO status
+#define PADS_GPIO12_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x064))) GPIO control including function select and overrides.
+#define PADS_GPIO13_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x068))) GPIO status
+#define PADS_GPIO13_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x06c))) GPIO control including function select and overrides.
+#define PADS_GPIO14_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x070))) GPIO status
+#define PADS_GPIO14_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x074))) GPIO control including function select and overrides.
+#define PADS_GPIO15_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x078))) GPIO status
+#define PADS_GPIO15_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x07c))) GPIO control including function select and overrides.
+#define PADS_GPIO16_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x080))) GPIO status
+#define PADS_GPIO16_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x084))) GPIO control including function select and overrides.
+#define PADS_GPIO17_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x088))) GPIO status
+#define PADS_GPIO17_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x08c))) GPIO control including function select and overrides.
+#define PADS_GPIO18_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x090))) GPIO status
+#define PADS_GPIO18_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x094))) GPIO control including function select and overrides.
+#define PADS_GPIO19_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x098))) GPIO status
+#define PADS_GPIO19_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x09c))) GPIO control including function select and overrides.
+#define PADS_GPIO20_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0a0))) GPIO status
+#define PADS_GPIO20_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0a4))) GPIO control including function select and overrides.
+#define PADS_GPIO21_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0a8))) GPIO status
+#define PADS_GPIO21_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0ac))) GPIO control including function select and overrides.
+#define PADS_GPIO22_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0b0))) GPIO status
+#define PADS_GPIO22_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0b4))) GPIO control including function select and overrides.
+#define PADS_GPIO23_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0b8))) GPIO status
+#define PADS_GPIO23_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0bc))) GPIO control including function select and overrides.
+#define PADS_GPIO24_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0c0))) GPIO status
+#define PADS_GPIO24_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0c4))) GPIO control including function select and overrides.
+#define PADS_GPIO25_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0c8))) GPIO status
+#define PADS_GPIO25_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0cc))) GPIO control including function select and overrides.
+#define PADS_GPIO26_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0d0))) GPIO status
+#define PADS_GPIO26_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0d4))) GPIO control including function select and overrides.
+#define PADS_GPIO27_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0d8))) GPIO status
+#define PADS_GPIO27_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0dc))) GPIO control including function select and overrides.
+#define PADS_GPIO28_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0e0))) GPIO status
+#define PADS_GPIO28_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0e4))) GPIO control including function select and overrides.
+#define PADS_GPIO29_STATUS              (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0e8))) GPIO status
+#define PADS_GPIO29_CTRL                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0ec))) GPIO control including function select and overrides.
+#define PADS_INTR0                      (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0f0))) Raw Interrupts
+#define PADS_INTR1                      (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0f4))) Raw Interrupts
+#define PADS_INTR2                      (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0f8))) Raw Interrupts
+#define PADS_INTR3                      (*((volatile uint32_t *)(PADS_BANK0_BASE+0x0fc))) Raw Interrupts
+#define PADS_PROC0_INTE0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x100))) Interrupt Enable for proc0
+#define PADS_PROC0_INTE1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x104))) Interrupt Enable for proc0
+#define PADS_PROC0_INTE2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x108))) Interrupt Enable for proc0
+#define PADS_PROC0_INTE3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x10c))) Interrupt Enable for proc0
+#define PADS_PROC0_INTF0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x110))) Interrupt Force for proc0
+#define PADS_PROC0_INTF1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x114))) Interrupt Force for proc0
+#define PADS_PROC0_INTF2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x118))) Interrupt Force for proc0
+#define PADS_PROC0_INTF3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x11c))) Interrupt Force for proc0
+#define PADS_PROC0_INTS0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x120))) Interrupt status after masking & forcing for proc0
+#define PADS_PROC0_INTS1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x124))) Interrupt status after masking & forcing for proc0
+#define PADS_PROC0_INTS2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x128))) Interrupt status after masking & forcing for proc0
+#define PADS_PROC0_INTS3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x12c))) Interrupt status after masking & forcing for proc0
+#define PADS_PROC1_INTE0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x130))) Interrupt Enable for proc1
+#define PADS_PROC1_INTE1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x134))) Interrupt Enable for proc1
+#define PADS_PROC1_INTE2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x138))) Interrupt Enable for proc1
+#define PADS_PROC1_INTE3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x13c))) Interrupt Enable for proc1
+#define PADS_PROC1_INTF0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x140))) Interrupt Force for proc1
+#define PADS_PROC1_INTF1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x144))) Interrupt Force for proc1
+#define PADS_PROC1_INTF2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x148))) Interrupt Force for proc1
+#define PADS_PROC1_INTF3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x14c))) Interrupt Force for proc1
+#define PADS_PROC1_INTS0                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x150))) Interrupt status after masking & forcing for proc1
+#define PADS_PROC1_INTS1                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x154))) Interrupt status after masking & forcing for proc1
+#define PADS_PROC1_INTS2                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x158))) Interrupt status after masking & forcing for proc1
+#define PADS_PROC1_INTS3                (*((volatile uint32_t *)(PADS_BANK0_BASE+0x15c))) Interrupt status after masking & forcing for proc1
+#define PADS_DORMANT_WAKE_INTE0         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x160))) Interrupt Enable for dormant_wake
+#define PADS_DORMANT_WAKE_INTE1         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x164))) Interrupt Enable for dormant_wake
+#define PADS_DORMANT_WAKE_INTE2         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x168))) Interrupt Enable for dormant_wake
+#define PADS_DORMANT_WAKE_INTE3         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x16c))) Interrupt Enable for dormant_wake
+#define PADS_DORMANT_WAKE_INTF0         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x170))) Interrupt Force for dormant_wake
+#define PADS_DORMANT_WAKE_INTF1         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x174))) Interrupt Force for dormant_wake
+#define PADS_DORMANT_WAKE_INTF2         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x178))) Interrupt Force for dormant_wake
+#define PADS_DORMANT_WAKE_INTF3         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x17c))) Interrupt Force for dormant_wake
+#define PADS_DORMANT_WAKE_INTS0         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x180))) Interrupt status after masking & forcing for dormant_wake
+#define PADS_DORMANT_WAKE_INTS1         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x184))) Interrupt status after masking & forcing for dormant_wake
+#define PADS_DORMANT_WAKE_INTS2         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x188))) Interrupt status after masking & forcing for dormant_wake
+#define PADS_DORMANT_WAKE_INTS3         (*((volatile uint32_t *)(PADS_BANK0_BASE+0x18c))) Interrupt status after masking & forcing for dormant_wake
 
 // XOSC
 #define XOSC_CTRL                       (*((volatile uint32_t *)(XOSC_BASE+0x00))) // Crystal Oscillator Control

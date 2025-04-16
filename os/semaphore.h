@@ -10,6 +10,16 @@ struct Sema4{
   TCB_t *bthreads_root;
 };
 
+// send data to other core
+void multicore_fifo_push_blocking(uint32_t data);
+// retrieve value from other core
+uint32_t multicore_fifo_pop_blocking(void);
+// discard data from fifo
+void multicore_fifo_drain(void);
+
+void sched_lock(void);
+void sched_release(void);
+
 // initializes semaphore
 void init_semaphore(Sema4_t *sem, int32_t value);
 

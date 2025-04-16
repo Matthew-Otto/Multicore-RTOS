@@ -2,50 +2,173 @@
 #include <stdint.h>
 #include "schedule.h"
 #include "../inc/rp2040.h"
+#include "../hw/sys.h"
+#include "../hw/hwctrl.h"
+#include "semaphore.h"
 
 
-TCB_t *RunPt = NULL;
-TCB_t *NextRunPt = NULL;
+extern void (*vector_table[])(void);
 
-// initialize cpu1
-// initialize systick timer
-// enable interrupts
-void init_scheduler(uint32_t timeslice) {
-    // intialize cpu1
-    // TODO
+#define NUM_CORES 2
+static volatile TCB_t *RunPt[NUM_CORES] = {NULL};
+static volatile TCB_t *NextRunPt[NUM_CORES] = {NULL};
+
+// Memory shared by both cores. must be accesses with mutex
+static uint32_t LifetimeThreadCount = 0;
+static uint16_t ActivePriorityCount[5] = {0}; // count the number of active threads in each priority level
+static TCB_t *ThreadSchedule[5]; // tracks pointers to link-list of each priority schedule
+
+// stub to grap timeslice from cpu0 and initialize scheduler
+static void core1_entry(void) {
+    // get timeslice from cpu0
+    //uint32_t timeslice = multicore_fifo_pop_blocking();
+    //init_scheduler(timeslice, false);
+
+    while (1) {
+        for (int i = 0; i < 2500000; i++) {};
+        GPIO_OUT_XOR = 1 << 25;
+    }
+}
+
+void init_scheduler(uint32_t timeslice, bool multicore) {
+    uint8_t cpu = proc_id();
+
+    if (cpu == 0 && multicore) {
+        uint32_t initial_pc1 = (uint32_t)core1_entry | 0x1; // set thumb bit
+        const uint32_t wake_seq[6] = {0, 0, 1, (uint32_t)vector_table, CPU1_STACK_TOP, initial_pc1};
+        uint8_t idx = 0;
+    
+        do {
+            uint32_t cmd = wake_seq[idx];
+            if (!cmd) { // always drain the READ FIFO (from core 1) before sending a 0
+                multicore_fifo_drain(); // discard data from read FIFO until empty
+                __asm ("sev"); // execute a SEV as core 1 may be waiting for FIFO space
+            }
+            multicore_fifo_push_blocking(cmd); // write 32 bit value to write FIFO
+            uint32_t response = multicore_fifo_pop_blocking(); // read 32 bit value from read FIFO once available
+            idx = cmd == response ? idx + 1 : 0; // move to next state on correct response (echo-d value) otherwise start over
+        } while (idx < 6);
+
+        // send timeslice to cpu1
+        //multicore_fifo_push_blocking(timeslice);
+    }
+    while(1);
 
     // initialize systick timer
     #define CLK_RATE 133000000 // 133Mhz
     SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
-    SYST_CSR |= 1 << 2; // use processor clock
-    SYST_CSR |= 1 << 1; // enable systick interrupts
-    SYST_CSR |= 1;      // enable systick timer
+    SYST_CSR = 0x7; // use processor clock, enable systick interrupts, enable systick timer
 
-    // enable interrupts
-    // TODO
-}
+    // launch threads on both cpus
+    // select first thread
+    sched_lock();
+    int pri = 0;
+    while (ActivePriorityCount[pri] == 0) { 
+      pri++;
+      // TODO: if overflow, schedule an idle task
+    }
+    RunPt[cpu] = ThreadSchedule[pri];
+    ThreadSchedule[pri] = RunPt[cpu]->next_tcb; // point root to next element to be scheduled
+    RunPt[cpu]->state = RUNNING;
+    sched_release();
 
-// triggers a pendsv interrupt
-void context_switch(void) {
-    ICSR = 1 << PENDSVSET_OFFSET;
-}
-
-// systick interrupt service routine
-void systick_handler(void) {
-    GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
-    //schedule(); BOZO
+    // launch first task
+    __asm volatile (
+        "LDR     R1, [%0]\n"    // R1 = value of RunPt
+        "LDR     R1, [R1]\n"    // SP is the first element in the TCB
+        "MSR     MSP, R1\n"     // load SP
+        "ADD     SP,SP,#4\n"    // discard LR from initial stack
+        "LDR     R1, [SP]\n"    // load initial function pointer into LR (from PC idx)
+        "MOV     LR, R1\n"
+        "ADD     SP,SP,#8\n"    // discard PSR
+        
+        "CPSIE   I\n"           // enable interrupts
+        "BX      LR\n"          // start first thread
+        :: "r" (RunPt[cpu])
+    );
 }
 
 // schedules next task
 void schedule(void) {
+    sched_lock();
+    uint32_t primask = start_critical();
+
+    uint8_t cpu = proc_id();
+
 
     // ...
-    context_switch();
+
+    // Schedule next thread
+    // find highest priority level with at least one active thread
+    uint32_t pri = 0;
+    while (ActivePriorityCount[pri] == 0) { 
+        pri++;
+        // TODO: if overflow, schedule an idle task
+    }
+
+    NextRunPt[cpu] = ThreadSchedule[pri];
+    ThreadSchedule[pri] = NextRunPt[cpu]->next_tcb; // point root to next element to be scheduled
+    NextRunPt[cpu]->state = RUNNING;
+
+
+    // trigger pendsv interrupt to context switch
+    ICSR = 1 << PENDSVSET_OFFSET;
+
+    sched_release();
+    end_critical(primask);
 }
 
 // add new thread to schedule
-void add_thread(void) {
+uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
+    sched_lock();
+    uint32_t primask = start_critical();
 
+    TCB_t *newtcb = (TCB_t *)malloc(sizeof(TCB_t));
+    if (newtcb == NULL) {
+        sched_release();
+        end_critical(primask);
+        return 1;
+    }
+    uint32_t *stack = (uint32_t *)malloc(stack_size*sizeof(uint32_t));
+    if (stack == NULL) {
+      free(newtcb);
+      end_critical(primask);
+      return 1;
+    }
+
+    LifetimeThreadCount++;
+    newtcb->id = LifetimeThreadCount;
+    newtcb->priority = priority;
+    newtcb->state = ACTIVE;
+    newtcb->stack = stack;
+
+    // initialize thread stack
+    newtcb->stack[stack_size-4] = 0x01000000;     // PSR (set thumb bit)
+    newtcb->stack[stack_size-8] = (uint32_t)task; // PC (function pointer)
+    newtcb->stack[0] = 0xDEADBEEF;                // magic value for stack overflow detection
+    newtcb->sp = &newtcb->stack[stack_size-8];    // set thread SP
+
+    // add thread to schedule
+    if (ThreadSchedule[priority] == NULL) {
+        newtcb->next_tcb = newtcb;
+        newtcb->prev_tcb = newtcb;
+        ThreadSchedule[priority] = newtcb;
+    } else {  // insert into end of list  
+        newtcb->prev_tcb = ThreadSchedule[priority]->prev_tcb;
+        ThreadSchedule[priority]->prev_tcb = newtcb;
+        newtcb->prev_tcb->next_tcb = newtcb;
+        newtcb->next_tcb = ThreadSchedule[priority];
+        
+        // immediately schedule new thread if it is the second thread to be added to this priority
+        if (ActivePriorityCount[priority] == 1) {
+            ThreadSchedule[priority] = newtcb;
+        }
+    }
+    ActivePriorityCount[priority]++;
+
+    sched_release();
+    end_critical(primask);
+    return 0;
 }
 
 // schedules next thread
@@ -61,4 +184,12 @@ void sleep(uint32_t sleep_time) {
 // removes thread from schedule and frees memory
 void kill(void) {
 
+}
+
+uint32_t get_RunPt(void) {
+    return (uint32_t)RunPt[proc_id()];
+}
+
+uint32_t get_NextRunPt(void) {
+    return (uint32_t)NextRunPt[proc_id()];
 }

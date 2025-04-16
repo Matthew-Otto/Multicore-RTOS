@@ -18,17 +18,16 @@ DEBUG_TARGET = target/rp2040.cfg
 #Flag points to the INC folder containing header files
 INC = -Iinc
 
-CPU     = cortex-m0plus
 ARMGNU  = arm-none-eabi
-AFLAGS  = --warn --fatal-warnings -mcpu=$(CPU) -g
+AFLAGS  = --warn --fatal-warnings -mthumb -mcpu=cortex-m0plus -g
 LDFLAGS = -Llib/ -lc -lgcc --gc-sections -Map=$(BUILD)main.map --print-memory-usage
-CFLAGS  = -mcpu=$(CPU) -mthumb -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -Og
+CFLAGS  = -mthumb -mcpu=cortex-m0plus -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -Og
 PICOTOOL = /usr/local/bin
 
 
 # SRCS: all source files from src directory
 VPATH = . lib inc os hw
-H_SRCS = inc/rp2040.h lib/utils.h hw/hwint.h
+H_SRCS = inc/rp2040.h lib/utils.h hw/hwctrl.h
 C_SRCS = $(wildcard *.c) $(wildcard inc/*.c) $(wildcard os/*.c) $(wildcard hw/*.c)
 S_SRCS = $(wildcard *.s) $(wildcard inc/*.s) $(wildcard os/*.s) $(wildcard hw/*.s)
 # OBJS: list of object files

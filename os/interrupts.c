@@ -1,9 +1,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../inc/rp2040.h"
+#include "../hw/hwctrl.h"
 #include "../hw/sys.h"
 #include "../hw/gpio.h"
-#include "heap.h"
+#include "../os/schedule.h"
+//#include "heap.h"
+//#include "semaphore.h"
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DELAY(cycles) {int count = cycles; while (count--) __asm ("nop");}
@@ -20,14 +23,14 @@ extern void main(void);
 static void default_isr(void);
 void reset_handler(void);
 void hardfault_handler(void);
-extern void pendSV_handler(void);
-extern void systick_handler(void);
+void pendSV_handler(void);
+void systick_handler(void);
 
 
 // vector table
 __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
 {
-    (void *)&__stack_top,   //  0 stack pointer
+    (void *)CPU0_STACK_TOP, //  0 stack pointer
     reset_handler,          //  1 reset
     default_isr,            //  2 NMI
     hardfault_handler,      //  3 hardFault
@@ -47,24 +50,24 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
 
 
 __attribute__((naked)) void reset_handler(void) {
-    // reset platform?
-
+    disable_interrupts();
+    
     // configure clocks
     init_sysclock();
-
+    
     // copy .data section from FLASH to SRAM
     uint32_t* src = &_sidata;
     uint32_t* dst = &_sdata;
     while (dst < &_edata){
         *dst++ = *src++;
     }
-
+    
     // zero initialize .bss
     uint32_t* bss = &_sbss;
     while (bss < &_ebss){
         *bss++ = 0x0;
     }
-
+    
     // TODO: reset vector table offset?
     //VTOR = (uint32_t)vector_table;
     // TODO: reset stack pointer?
@@ -77,7 +80,7 @@ __attribute__((naked)) void reset_handler(void) {
 }
 
 void hardfault_handler(void) {
-    init_gpio(25);
+    init_gpio(25, GPIO_OUTPUT);
 
     const bool code[] = {1, 1, 1, 0, 0, 0, 1, 1, 1};
 
@@ -85,20 +88,46 @@ void hardfault_handler(void) {
     while (1) {
         GPIO_OUT_SET = 1 << 25;
         if (code[i]) {
-            DELAY(1000000);
+            DELAY(10000000);
         } else {
-            DELAY(500000);
+            DELAY(5000000);
         }
         GPIO_OUT_CLR = 1 << 25;
-        DELAY(500000);
+        DELAY(5000000);
         
         if (i == (ARRAY_LEN(code)-1)) {
             i = 0;
-            DELAY(1000000);
+            DELAY(10000000);
         } else {
             i++;
         }
     }
+}
+
+void pendSV_handler(void) {
+    __asm volatile (
+        "CPSID I\n"
+        "PUSH {R4-R7}\n"
+        "LDR R1, [%0]\n" // get RunPt
+        "MRS R3, MSP\n"
+        "STR R3, [R1]\n" // store SP
+
+        "LDR R1, [%1]\n" // load next TCB pointer
+        "STR R1, [%0]\n" // update RunPt
+        "LDR R3, [R1]\n" // load SP
+        "MSR MSP, R3\n"
+        "POP {R4-R7}\n"
+        "CPSIE I\n"
+        "BX LR\n"
+        :: "r" (get_RunPt()), "r" (get_NextRunPt())
+    );
+}
+
+// systick interrupt service routine
+void systick_handler(void) {
+    //GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
+    GPIO_OUT_XOR = 1 << 2;
+    //schedule();
 }
 
 void default_isr(void) {

@@ -1,18 +1,19 @@
 // low level cpu control
+// exposes arm instructions as c functions
 
-#ifndef HW_INT_H
-#define HW_INT_H
+#ifndef HW_CTRL_H
+#define HW_CTRL_H
 
 #include <stdint.h>
 
 // disable interrupts
-static void disable_interrupts(void){
-    __asm volatile ("CPSID I\n");
+static inline void disable_interrupts(void){
+    __asm volatile ("CPSID I");
 }
 
 // enable interrupts
-static void enable_interrupts(void){
-    __asm volatile ("CPSIE I\n");
+static inline void enable_interrupts(void){
+    __asm volatile ("CPSIE I");
 }
 
 // saves current interrupt status before disabling
@@ -35,4 +36,4 @@ static inline void wait_for_interrupt(void){
     __asm volatile ("WFI");
 }
 
-#endif // CPU_H
+#endif // HW_CTRL_H

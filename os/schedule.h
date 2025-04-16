@@ -2,6 +2,7 @@
 #define SCHEDULE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "heap.h"
 
 typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD} ThreadState;
@@ -21,19 +22,13 @@ struct TCB {
 // initialize cpu1
 // initialize systick timer
 // enable interrupts
-void init_scheduler(uint32_t timeslice);
-
-// triggers a pendsv
-void context_switch(void);
-
-// systick interrupt service routine
-void systick_handler(void);
+void init_scheduler(uint32_t timeslice, bool multicore);
 
 // schedules next task
 void schedule(void);
 
 // add new thread to schedule
-void add_thread(void);
+uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority);
 
 // schedules next thread
 void suspend(void);
@@ -43,5 +38,9 @@ void sleep(uint32_t sleep_time);
 
 // removes thread from schedule and frees memory
 void kill(void);
+
+uint32_t get_RunPt(void);
+
+uint32_t get_NextRunPt(void);
 
 #endif // SCHEDULE_H

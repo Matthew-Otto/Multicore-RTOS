@@ -1,18 +1,16 @@
 #include <stdint.h>
+#include "sys.h"
 #include "../inc/rp2040.h"
 
-// use XOSC as system clock source
+// use XOSC+PLL as system clock source
 void init_sysclock(void) {
-    // pull PLL out of reset
-    RESET_CLR = RESET_PLL_SYS_BIT;
-
     // init XOSC
     XOSC_STARTUP = 47; // set startup delay (47 ~= 1ms)
     XOSC_CTRL = 0xFAB000; // enable XOSC 
     while (!(XOSC_STATUS & (1<<31))); // wait for XOSC to warm up (~1ms)
-
+    
     // configure PLL
-    while (!(RESET_DONE & RESET_PLL_SYS_BIT)); // wait for PLL to complete reset
+    init_subsystem(PLL_SYS);
     PLL_SYS_FBDIV_INT = 133; // FBDIV = 133
     PLL_SYS_PWR_CLR = 0x21; // turn on main power and VCO
     while (!(PLL_SYS_CS & (1<<31))); // wait for PLL lock
@@ -33,4 +31,13 @@ void init_sysclock(void) {
     
     // disable ROSC
     ROSC_CTRL = (0xd1e << 12);
+}
+
+void init_subsystem(subsystem_e sys) {
+    RESET_CLR = (1U << sys); // pull subsystem out of reset
+    while (!(RESET_DONE & (1U << sys))); // wait for subsystem to complete reset
+}
+
+uint8_t proc_id(void) {
+    return SIO_CPUID;
 }
