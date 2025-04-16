@@ -17,16 +17,11 @@ static uint32_t LifetimeThreadCount = 0;
 static uint16_t ActivePriorityCount[5] = {0}; // count the number of active threads in each priority level
 static TCB_t *ThreadSchedule[5]; // tracks pointers to link-list of each priority schedule
 
-// stub to grap timeslice from cpu0 and initialize scheduler
+// stub to grab timeslice from cpu0 and initialize scheduler
 static void core1_entry(void) {
     // get timeslice from cpu0
-    //uint32_t timeslice = multicore_fifo_pop_blocking();
-    //init_scheduler(timeslice, false);
-
-    while (1) {
-        for (int i = 0; i < 10000000; i++) {};
-        //GPIO_OUT_XOR = 1 << 25;
-    }
+    uint32_t timeslice = multicore_fifo_pop_blocking();
+    init_scheduler(timeslice, false);
 }
 
 void init_scheduler(uint32_t timeslice, bool multicore) {
