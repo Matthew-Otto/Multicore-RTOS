@@ -6,7 +6,7 @@
 #include "heap.h"
 #include "../hw/sys.h"
 
-typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD} ThreadState;
+typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD, IDLE} ThreadState;
 
 typedef struct TCB TCB_t;
 struct TCB {

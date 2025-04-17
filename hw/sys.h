@@ -26,9 +26,9 @@ typedef enum {
     SPI1 = 17,
     SYSCFG = 18,
     SYSINFO = 19,
+    TBMAN = 20,
     TIMER = 21,
     UART0 = 22,
-    TBMAN = 20,
     UART1 = 23,
     USBCTRL = 24,
 } subsystem_e;

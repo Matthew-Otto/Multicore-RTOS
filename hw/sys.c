@@ -25,7 +25,7 @@ void init_sysclock(void) {
     CLK_SYS_CTRL = 1; // Set sysclock source to AUX (AUX set to PLL at reset)
     while (!CLK_SYS_SELECTED); // wait for glitchless mux to switch clock source
     
-    // enable peripheral clock and switch source to PLL (not required)
+    // enable peripheral clock and switch source to PLL
     CLK_PERI_CTRL = (1 << 11) | (1 << 5);
     while (!CLK_PERI_SELECTED); // wait for glitchless mux to switch clock source
     

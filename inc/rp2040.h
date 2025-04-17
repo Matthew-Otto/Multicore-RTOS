@@ -61,55 +61,55 @@
 #define PROC_IN_SYNC_BYPASS_HI          (*((volatile uint32_t *)(SYSCFG_BASE+0x10)))
 
 // Clocks
-#define  CLK_GPOUT0_CTRL                (*((volatile uint32_t *)(CLOCKS_BASE+0x00))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_GPOUT0_DIV                 (*((volatile uint32_t *)(CLOCKS_BASE+0x04))) // Clock divisor, can be changed on-the-fly
-#define  CLK_GPOUT0_SELECTED            (*((volatile uint32_t *)(CLOCKS_BASE+0x08))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_GPOUT1_CTRL                (*((volatile uint32_t *)(CLOCKS_BASE+0x0c))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_GPOUT1_DIV                 (*((volatile uint32_t *)(CLOCKS_BASE+0x10))) // Clock divisor, can be changed on-the-fly
-#define  CLK_GPOUT1_SELECTED            (*((volatile uint32_t *)(CLOCKS_BASE+0x14))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_GPOUT2_CTRL                (*((volatile uint32_t *)(CLOCKS_BASE+0x18))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_GPOUT2_DIV                 (*((volatile uint32_t *)(CLOCKS_BASE+0x1c))) // Clock divisor, can be changed on-the-fly
-#define  CLK_GPOUT2_SELECTED            (*((volatile uint32_t *)(CLOCKS_BASE+0x20))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_GPOUT3_CTRL                (*((volatile uint32_t *)(CLOCKS_BASE+0x24))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_GPOUT3_DIV                 (*((volatile uint32_t *)(CLOCKS_BASE+0x28))) // Clock divisor, can be changed on-the-fly
-#define  CLK_GPOUT3_SELECTED            (*((volatile uint32_t *)(CLOCKS_BASE+0x2c))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_REF_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x30))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_REF_DIV                    (*((volatile uint32_t *)(CLOCKS_BASE+0x34))) // Clock divisor, can be changed on-the-fly
-#define  CLK_REF_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x38))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_SYS_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x3c))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_SYS_DIV                    (*((volatile uint32_t *)(CLOCKS_BASE+0x40))) // Clock divisor, can be changed on-the-fly
-#define  CLK_SYS_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x44))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_PERI_CTRL                  (*((volatile uint32_t *)(CLOCKS_BASE+0x48))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_PERI_SELECTED              (*((volatile uint32_t *)(CLOCKS_BASE+0x50))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_USB_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x54))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_USB_DIV                    (*((volatile uint32_t *)(CLOCKS_BASE+0x58))) // Clock divisor, can be changed on-the-fly
-#define  CLK_USB_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x5c))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_ADC_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x60))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_ADC_DIV                    (*((volatile uint32_t *)(CLOCKS_BASE+0x64))) // Clock divisor, can be changed on-the-fly
-#define  CLK_ADC_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x68))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_RTC_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x6c))) // Clock control, can be changed on-the-fly (except for auxsrc)
-#define  CLK_RTC_DIV                    (*((volatile uint32_t *)(CLOCKS_BASE+0x70))) // Clock divisor, can be changed on-the-fly
-#define  CLK_RTC_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x74))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
-#define  CLK_SYS_RESUS_CTRL             (*((volatile uint32_t *)(CLOCKS_BASE+0x78))) //
-#define  CLK_SYS_RESUS_STATUS           (*((volatile uint32_t *)(CLOCKS_BASE+0x7c))) //
-#define  FC0_REF_KHZ                    (*((volatile uint32_t *)(CLOCKS_BASE+0x80))) // Reference clock frequency in kHz
-#define  FC0_MIN_KHZ                    (*((volatile uint32_t *)(CLOCKS_BASE+0x84))) // Minimum pass frequency in kHz. This is optional. Set to 0 if you are not using the pass/fail flags
-#define  FC0_MAX_KHZ                    (*((volatile uint32_t *)(CLOCKS_BASE+0x88))) // Maximum pass frequency in kHz. This is optional. Set to 0x1ffffff if you are not using the pass/fail flags
-#define  FC0_DELAY                      (*((volatile uint32_t *)(CLOCKS_BASE+0x8c))) // Delays the start of frequency counting to allow the mux to settle Delay is measured in multiples of the reference clock period
-#define  FC0_INTERVAL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x90))) // The test interval is 0.98us * 2**interval, but let’s call it 1us * 2**interval The default gives a test interval of 250us
-#define  FC0_SRC                        (*((volatile uint32_t *)(CLOCKS_BASE+0x94))) // Clock sent to frequency counter, set to 0 when not required Writing to this register initiates the frequency count
-#define  FC0_STATUS                     (*((volatile uint32_t *)(CLOCKS_BASE+0x98))) // Frequency counter status
-#define  FC0_RESULT                     (*((volatile uint32_t *)(CLOCKS_BASE+0x9c))) // Result of frequency measurement, only valid when status_done=1
-#define  WAKE_EN0                       (*((volatile uint32_t *)(CLOCKS_BASE+0xa0))) // enable clock in wake mode
-#define  WAKE_EN1                       (*((volatile uint32_t *)(CLOCKS_BASE+0xa4))) // enable clock in wake mode
-#define  SLEEP_EN0                      (*((volatile uint32_t *)(CLOCKS_BASE+0xa8))) // enable clock in sleep mode
-#define  SLEEP_EN1                      (*((volatile uint32_t *)(CLOCKS_BASE+0xac))) // enable clock in sleep mode
-#define  ENABLED0                       (*((volatile uint32_t *)(CLOCKS_BASE+0xb0))) // indicates the state of the clock enable
-#define  ENABLED1                       (*((volatile uint32_t *)(CLOCKS_BASE+0xb4))) // indicates the state of the clock enable
-#define  INTR                           (*((volatile uint32_t *)(CLOCKS_BASE+0xb8))) // Raw Interrupts
-#define  INTE                           (*((volatile uint32_t *)(CLOCKS_BASE+0xbc))) // Interrupt Enable
-#define  INTF                           (*((volatile uint32_t *)(CLOCKS_BASE+0xc0))) // Interrupt Force
-#define  INTS                           (*((volatile uint32_t *)(CLOCKS_BASE+0xc4))) // Interrupt status after masking & forcing
+#define CLK_GPOUT0_CTRL                 (*((volatile uint32_t *)(CLOCKS_BASE+0x00))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_GPOUT0_DIV                  (*((volatile uint32_t *)(CLOCKS_BASE+0x04))) // Clock divisor, can be changed on-the-fly
+#define CLK_GPOUT0_SELECTED             (*((volatile uint32_t *)(CLOCKS_BASE+0x08))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_GPOUT1_CTRL                 (*((volatile uint32_t *)(CLOCKS_BASE+0x0c))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_GPOUT1_DIV                  (*((volatile uint32_t *)(CLOCKS_BASE+0x10))) // Clock divisor, can be changed on-the-fly
+#define CLK_GPOUT1_SELECTED             (*((volatile uint32_t *)(CLOCKS_BASE+0x14))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_GPOUT2_CTRL                 (*((volatile uint32_t *)(CLOCKS_BASE+0x18))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_GPOUT2_DIV                  (*((volatile uint32_t *)(CLOCKS_BASE+0x1c))) // Clock divisor, can be changed on-the-fly
+#define CLK_GPOUT2_SELECTED             (*((volatile uint32_t *)(CLOCKS_BASE+0x20))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_GPOUT3_CTRL                 (*((volatile uint32_t *)(CLOCKS_BASE+0x24))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_GPOUT3_DIV                  (*((volatile uint32_t *)(CLOCKS_BASE+0x28))) // Clock divisor, can be changed on-the-fly
+#define CLK_GPOUT3_SELECTED             (*((volatile uint32_t *)(CLOCKS_BASE+0x2c))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_REF_CTRL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x30))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_REF_DIV                     (*((volatile uint32_t *)(CLOCKS_BASE+0x34))) // Clock divisor, can be changed on-the-fly
+#define CLK_REF_SELECTED                (*((volatile uint32_t *)(CLOCKS_BASE+0x38))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_SYS_CTRL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x3c))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_SYS_DIV                     (*((volatile uint32_t *)(CLOCKS_BASE+0x40))) // Clock divisor, can be changed on-the-fly
+#define CLK_SYS_SELECTED                (*((volatile uint32_t *)(CLOCKS_BASE+0x44))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_PERI_CTRL                   (*((volatile uint32_t *)(CLOCKS_BASE+0x48))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_PERI_SELECTED               (*((volatile uint32_t *)(CLOCKS_BASE+0x50))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_USB_CTRL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x54))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_USB_DIV                     (*((volatile uint32_t *)(CLOCKS_BASE+0x58))) // Clock divisor, can be changed on-the-fly
+#define CLK_USB_SELECTED                (*((volatile uint32_t *)(CLOCKS_BASE+0x5c))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_ADC_CTRL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x60))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_ADC_DIV                     (*((volatile uint32_t *)(CLOCKS_BASE+0x64))) // Clock divisor, can be changed on-the-fly
+#define CLK_ADC_SELECTED                (*((volatile uint32_t *)(CLOCKS_BASE+0x68))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_RTC_CTRL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x6c))) // Clock control, can be changed on-the-fly (except for auxsrc)
+#define CLK_RTC_DIV                     (*((volatile uint32_t *)(CLOCKS_BASE+0x70))) // Clock divisor, can be changed on-the-fly
+#define CLK_RTC_SELECTED                (*((volatile uint32_t *)(CLOCKS_BASE+0x74))) // Indicates which SRC is currently selected by the glitchless mux (one-hot).
+#define CLK_SYS_RESUS_CTRL              (*((volatile uint32_t *)(CLOCKS_BASE+0x78))) //
+#define CLK_SYS_RESUS_STATUS            (*((volatile uint32_t *)(CLOCKS_BASE+0x7c))) //
+#define FC0_REF_KHZ                     (*((volatile uint32_t *)(CLOCKS_BASE+0x80))) // Reference clock frequency in kHz
+#define FC0_MIN_KHZ                     (*((volatile uint32_t *)(CLOCKS_BASE+0x84))) // Minimum pass frequency in kHz. This is optional. Set to 0 if you are not using the pass/fail flags
+#define FC0_MAX_KHZ                     (*((volatile uint32_t *)(CLOCKS_BASE+0x88))) // Maximum pass frequency in kHz. This is optional. Set to 0x1ffffff if you are not using the pass/fail flags
+#define FC0_DELAY                       (*((volatile uint32_t *)(CLOCKS_BASE+0x8c))) // Delays the start of frequency counting to allow the mux to settle Delay is measured in multiples of the reference clock period
+#define FC0_INTERVAL                    (*((volatile uint32_t *)(CLOCKS_BASE+0x90))) // The test interval is 0.98us * 2**interval, but let’s call it 1us * 2**interval The default gives a test interval of 250us
+#define FC0_SRC                         (*((volatile uint32_t *)(CLOCKS_BASE+0x94))) // Clock sent to frequency counter, set to 0 when not required Writing to this register initiates the frequency count
+#define FC0_STATUS                      (*((volatile uint32_t *)(CLOCKS_BASE+0x98))) // Frequency counter status
+#define FC0_RESULT                      (*((volatile uint32_t *)(CLOCKS_BASE+0x9c))) // Result of frequency measurement, only valid when status_done=1
+#define WAKE_EN0                        (*((volatile uint32_t *)(CLOCKS_BASE+0xa0))) // enable clock in wake mode
+#define WAKE_EN1                        (*((volatile uint32_t *)(CLOCKS_BASE+0xa4))) // enable clock in wake mode
+#define SLEEP_EN0                       (*((volatile uint32_t *)(CLOCKS_BASE+0xa8))) // enable clock in sleep mode
+#define SLEEP_EN1                       (*((volatile uint32_t *)(CLOCKS_BASE+0xac))) // enable clock in sleep mode
+#define ENABLED0                        (*((volatile uint32_t *)(CLOCKS_BASE+0xb0))) // indicates the state of the clock enable
+#define ENABLED1                        (*((volatile uint32_t *)(CLOCKS_BASE+0xb4))) // indicates the state of the clock enable
+#define INTR                            (*((volatile uint32_t *)(CLOCKS_BASE+0xb8))) // Raw Interrupts
+#define INTE                            (*((volatile uint32_t *)(CLOCKS_BASE+0xbc))) // Interrupt Enable
+#define INTF                            (*((volatile uint32_t *)(CLOCKS_BASE+0xc0))) // Interrupt Force
+#define INTS                            (*((volatile uint32_t *)(CLOCKS_BASE+0xc4))) // Interrupt status after masking & forcing
 
 // RESETS
 #define RESET                           (*((volatile uint32_t *)(RESETS_BASE+0x0))) // Reset control.
@@ -350,6 +350,30 @@
 #define PLL_USB_PWR                     (*((volatile uint32_t *)(PLL_USB_BASE+0x4))) // Controls the PLL power modes.
 #define PLL_USB_FBDIV_INT               (*((volatile uint32_t *)(PLL_USB_BASE+0x8))) // Feedback divisor
 #define PLL_USB_PRIM                    (*((volatile uint32_t *)(PLL_USB_BASE+0xc))) // Controls the PLL post dividers for the primary output
+
+// UART0
+#define UART0_UARTDR                    (*((volatile uint32_t *)(UART0_BASE+0x000))) // Data Register, UARTDR
+#define UART0_UARTRSR                   (*((volatile uint32_t *)(UART0_BASE+0x004))) // Receive Status Register/Error Clear Register, UARTRSR/UARTECR
+#define UART0_UARTFR                    (*((volatile uint32_t *)(UART0_BASE+0x018))) // Flag Register, UARTFR
+#define UART0_UARTILPR                  (*((volatile uint32_t *)(UART0_BASE+0x020))) // IrDA Low-Power Counter Register, UARTILPR
+#define UART0_UARTIBRD                  (*((volatile uint32_t *)(UART0_BASE+0x024))) // Integer Baud Rate Register, UARTIBRD
+#define UART0_UARTFBRD                  (*((volatile uint32_t *)(UART0_BASE+0x028))) // Fractional Baud Rate Register, UARTFBRD
+#define UART0_UARTLCR_H                 (*((volatile uint32_t *)(UART0_BASE+0x02c))) // Line Control Register, UARTLCR_H
+#define UART0_UARTCR                    (*((volatile uint32_t *)(UART0_BASE+0x030))) // Control Register, UARTCR
+#define UART0_UARTIFLS                  (*((volatile uint32_t *)(UART0_BASE+0x034))) // Interrupt FIFO Level Select Register, UARTIFLS
+#define UART0_UARTIMSC                  (*((volatile uint32_t *)(UART0_BASE+0x038))) // Interrupt Mask Set/Clear Register, UARTIMSC
+#define UART0_UARTRIS                   (*((volatile uint32_t *)(UART0_BASE+0x03c))) // Raw Interrupt Status Register, UARTRIS
+#define UART0_UARTMIS                   (*((volatile uint32_t *)(UART0_BASE+0x040))) // Masked Interrupt Status Register, UARTMIS
+#define UART0_UARTICR                   (*((volatile uint32_t *)(UART0_BASE+0x044))) // Interrupt Clear Register, UARTICR
+#define UART0_UARTDMACR                 (*((volatile uint32_t *)(UART0_BASE+0x048))) // DMA Control Register, UARTDMACR
+#define UART0_UARTPERIPHID0             (*((volatile uint32_t *)(UART0_BASE+0xfe0))) // UARTPeriphID0 Register
+#define UART0_UARTPERIPHID1             (*((volatile uint32_t *)(UART0_BASE+0xfe4))) // UARTPeriphID1 Register
+#define UART0_UARTPERIPHID2             (*((volatile uint32_t *)(UART0_BASE+0xfe8))) // UARTPeriphID2 Register
+#define UART0_UARTPERIPHID3             (*((volatile uint32_t *)(UART0_BASE+0xfec))) // UARTPeriphID3 Register
+#define UART0_UARTPCELLID0              (*((volatile uint32_t *)(UART0_BASE+0xff0))) // UARTPCellID0 Register
+#define UART0_UARTPCELLID1              (*((volatile uint32_t *)(UART0_BASE+0xff4))) // UARTPCellID1 Register
+#define UART0_UARTPCELLID2              (*((volatile uint32_t *)(UART0_BASE+0xff8))) // UARTPCellID2 Register
+#define UART0_UARTPCELLID3              (*((volatile uint32_t *)(UART0_BASE+0xffc))) // UARTPCellID3 Register
 
 // ROSC
 #define ROSC_CTRL                       (*((volatile uint32_t *)(ROSC_BASE+0x00))) // Ring Oscillator control
