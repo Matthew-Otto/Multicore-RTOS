@@ -8,38 +8,38 @@ MEMORY
 
 SECTIONS
 {
-  .boot2 :
-  {
-      _sboot2 = .;
-      KEEP(*(.boot2))
-      _eboot2 = .;
-  } > FLASH
+    .boot2 :
+    {
+        _sboot2 = .;
+        KEEP(*(.boot2))
+        _eboot2 = .;
+    } > FLASH
 
-  .text : {
-    KEEP(*(.vectors))
-    *(.text*)
-    *(.rodata*)
-  } > FLASH
+    .text : {
+        KEEP(*(.vectors))
+        *(.text*)
+        *(.rodata*)
+    } > FLASH
 
-  .data : {
-    _sdata = .;
-    *(.data*)
-    _edata = .;
-  } > SRAM AT > FLASH
+    .data : {
+        _sdata = .;
+        *(.data*)
+        _edata = .;
+    } > SRAM AT > FLASH
 
-  _sidata = LOADADDR(.data);
+    _sidata = LOADADDR(.data);
 
-  .bss : {
-    _sbss = .;
-    *(.bss*)
-    *(COMMON)
-    _ebss = .;
-  } > SRAM
+    .bss : {
+        _sbss = .;
+        *(.bss*)
+        *(COMMON)
+        _ebss = .;
+    } > SRAM
 
-  .stack (COPY) : {
-    __stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 4;
-  }
+    .stack (COPY) : {
+        __stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 4;
+    }
 
-  ASSERT(_eboot2 - _sboot2 == 256,
-    "ERROR: Pico second stage bootloader must be 256 bytes in size")
+    ASSERT(_eboot2 - _sboot2 == 256,
+        "ERROR: Pico second stage bootloader must be 256 bytes in size")
 }

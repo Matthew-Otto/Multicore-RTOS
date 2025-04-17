@@ -5,8 +5,7 @@
 #include "../hw/sys.h"
 #include "../hw/gpio.h"
 #include "../os/schedule.h"
-//#include "heap.h"
-//#include "semaphore.h"
+
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DELAY(cycles) {int count = cycles; while (count--) __asm ("nop");}
@@ -15,11 +14,11 @@ extern volatile TCB_t *RunPt;
 extern volatile TCB_t *NextRunPt;
 
 extern uint32_t __stack_top;
-extern uint32_t _sidata;
-extern uint32_t _sdata;
-extern uint32_t _edata;
-extern uint32_t _sbss;
-extern uint32_t _ebss;
+extern uint8_t _sidata;
+extern uint8_t _sdata;
+extern uint8_t _edata;
+extern uint8_t _sbss;
+extern uint8_t _ebss;
 
 // forward declaration of ISR
 extern void main(void);
@@ -59,14 +58,14 @@ __attribute__((naked)) void reset_handler(void) {
     init_sysclock();
     
     // copy .data section from FLASH to SRAM
-    uint32_t* src = &_sidata;
-    uint32_t* dst = &_sdata;
+    uint8_t* src = &_sidata;
+    uint8_t* dst = &_sdata;
     while (dst < &_edata){
         *dst++ = *src++;
     }
     
     // zero initialize .bss
-    uint32_t* bss = &_sbss;
+    uint8_t* bss = &_sbss;
     while (bss < &_ebss){
         *bss++ = 0x0;
     }
