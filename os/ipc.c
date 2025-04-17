@@ -4,6 +4,25 @@
 #include <stdio.h>
 #include "ipc.h"
 #include "schedule.h"
+#include "../inc/rp2040.h"
+
+/********* inter-core FIFO *********/
+void multicore_fifo_push_blocking(uint32_t data) {
+  while (!(FIFO_ST & 0b10));
+  FIFO_WR = data;
+  __asm ("sev");
+}
+
+uint32_t multicore_fifo_pop_blocking(void) {
+  while (!(FIFO_ST & 0b1)) __asm("wfe");
+  return FIFO_RD;
+}
+
+void multicore_fifo_drain(void) {
+  while (FIFO_ST & 0b1) {
+      (void)FIFO_RD;
+  }
+}
 
 /************* FIFO *************/
 // lock free fifo suitable for single-producer single-consumer

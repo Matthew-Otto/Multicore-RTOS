@@ -112,7 +112,6 @@ void hardfault_handler(void) {
 
 // When pushing context to the stack, the hardware saves eight 32-bit words, comprising xPSR, ReturnAddress(), LR
 // (R14), R12, R3, R2, R1, and R0.
-
 __attribute__((naked)) void pendSV_handler(void) {
     __asm (
         "CPSID  I\n"                // disable interrupts
@@ -169,7 +168,6 @@ __attribute__((naked)) void pendSV_handler(void) {
 
 // systick interrupt service routine
 void systick_handler(void) {
-    GPIO_OUT_XOR = 1 << 25;  // XOR the LED pin
     schedule();
 }
 

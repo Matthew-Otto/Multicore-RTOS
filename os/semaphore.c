@@ -4,25 +4,6 @@
 #include "../hw/hwctrl.h"
 
 
-void multicore_fifo_push_blocking(uint32_t data) {
-    while (!(FIFO_ST & 0b10));
-    FIFO_WR = data;
-    __asm ("sev");
-}
-
-uint32_t multicore_fifo_pop_blocking(void) {
-    while (!(FIFO_ST & 0b1)) __asm("wfe");
-    return FIFO_RD;
-}
-
-void multicore_fifo_drain(void) {
-    while (FIFO_ST & 0b1) {
-        (void)FIFO_RD;
-        //volatile uint32_t discard = FIFO_RD;
-        //(void)discard;
-    }
-}
-
 void sched_lock(void) {
     while (!SPINLOCK0);
 }

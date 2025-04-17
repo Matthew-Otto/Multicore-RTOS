@@ -6,6 +6,15 @@
 
 #include <stdint.h>
 
+/********* inter-core FIFO *********/
+// send data to other core
+void multicore_fifo_push_blocking(uint32_t data);
+// retrieve value from other core
+uint32_t multicore_fifo_pop_blocking(void);
+// discard data from fifo
+void multicore_fifo_drain(void);
+
+
 /************* SPSC_FIFO *************/
 // lock free fifo suitable for single-producer single-consumer
 typedef struct FIFO32 FIFO32_t;

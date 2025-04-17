@@ -3,6 +3,7 @@
 #include "schedule.h"
 #include "../inc/rp2040.h"
 #include "../hw/hwctrl.h"
+#include "ipc.h"
 #include "semaphore.h"
 
 
