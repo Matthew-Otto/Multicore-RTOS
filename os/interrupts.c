@@ -54,13 +54,16 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
 __attribute__((naked)) void reset_handler(void) {
     disable_interrupts();
 
+    // configure clocks
+    init_sysclock();
+
+    // init tick generator
+    init_watchdog_tick();
+
     // clear spinlocks
     for (int i = 0; i < 32; ++i) {
         (*((volatile uint32_t *)(0xD0000100+(i*4)))) = 1;
     }
-    
-    // configure clocks
-    init_sysclock();
     
     // copy .data section from FLASH to SRAM
     uint8_t* src = &_sidata;

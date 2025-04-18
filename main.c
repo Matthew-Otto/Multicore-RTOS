@@ -42,7 +42,6 @@ void main(void) {
     add_thread(&basict,128,1);
     add_thread(&heapthrash,128,1);
     add_thread(&heapthrash,128,1);
-
     
     // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);

@@ -387,6 +387,41 @@
 #define UART0_UARTPCELLID2              (*((volatile uint32_t *)(UART0_BASE+0xff8))) // UARTPCellID2 Register
 #define UART0_UARTPCELLID3              (*((volatile uint32_t *)(UART0_BASE+0xffc))) // UARTPCellID3 Register
 
+// TIMER
+#define TIMER_TIMEHW                    (*((volatile uint32_t *)(TIMER_BASE+0x00))) // Write to bits 63:32 of time always write timelw before timehw
+#define TIMER_TIMELW                    (*((volatile uint32_t *)(TIMER_BASE+0x04))) // Write to bits 31:0 of time writes do not get copied to time until timehw is written
+#define TIMER_TIMEHR                    (*((volatile uint32_t *)(TIMER_BASE+0x08))) // Read from bits 63:32 of time always read timelr before timehr
+#define TIMER_TIMELR                    (*((volatile uint32_t *)(TIMER_BASE+0x0c))) // Read from bits 31:0 of time
+#define TIMER_ALARM0                    (*((volatile uint32_t *)(TIMER_BASE+0x10))) // Arm alarm 0, and configure the time it will fire. Once armed, the alarm fires when TIMER_ALARM0 == TIMELR. The alarm will disarm itself once it fires, and can be disarmed early using the ARMED status register.
+#define TIMER_ALARM1                    (*((volatile uint32_t *)(TIMER_BASE+0x14))) // Arm alarm 1, and configure the time it will fire. Once armed, the alarm fires when TIMER_ALARM1 == TIMELR. The alarm will disarm itself once it fires, and can be disarmed early using the ARMED status register.
+#define TIMER_ALARM2                    (*((volatile uint32_t *)(TIMER_BASE+0x18))) // Arm alarm 2, and configure the time it will fire. Once armed, the alarm fires when TIMER_ALARM2 == TIMELR. The alarm will disarm itself once it fires, and can be disarmed early using the ARMED status register.
+#define TIMER_ALARM3                    (*((volatile uint32_t *)(TIMER_BASE+0x1c))) // Arm alarm 3, and configure the time it will fire. Once armed, the alarm fires when TIMER_ALARM3 == TIMELR. The alarm will disarm itself once it fires, and can be disarmed early using the ARMED status register.
+#define TIMER_ARMED                     (*((volatile uint32_t *)(TIMER_BASE+0x20))) // Indicates the armed/disarmed status of each alarm. A write to the corresponding ALARMx register arms the alarm. Alarms automatically disarm upon firing, but writing ones here will disarm immediately without waiting to fire.
+#define TIMER_TIMERAWH                  (*((volatile uint32_t *)(TIMER_BASE+0x24))) // Raw read from bits 63:32 of time (no side effects)
+#define TIMER_TIMERAWL                  (*((volatile uint32_t *)(TIMER_BASE+0x28))) // Raw read from bits 31:0 of time (no side effects)
+#define TIMER_DBGPAUSE                  (*((volatile uint32_t *)(TIMER_BASE+0x2c))) // Set bits high to enable pause when the corresponding debug ports are active
+#define TIMER_PAUSE                     (*((volatile uint32_t *)(TIMER_BASE+0x30))) // Set high to pause the timer
+#define TIMER_INTR                      (*((volatile uint32_t *)(TIMER_BASE+0x34))) // Raw Interrupts
+#define TIMER_INTE                      (*((volatile uint32_t *)(TIMER_BASE+0x38))) // Interrupt Enable
+#define TIMER_INTF                      (*((volatile uint32_t *)(TIMER_BASE+0x3c))) // Interrupt Force
+#define TIMER_INTS                      (*((volatile uint32_t *)(TIMER_BASE+0x40))) // Interrupt status after masking & forcing
+
+// WATCHDOG
+#define WATCHDOG_CTRL                   (*((volatile uint32_t *)(WATCHDOG_BASE+0x00))) // Watchdog control
+#define WATCHDOG_LOAD                   (*((volatile uint32_t *)(WATCHDOG_BASE+0x04))) // Load the watchdog timer.
+#define WATCHDOG_REASON                 (*((volatile uint32_t *)(WATCHDOG_BASE+0x08))) // Logs the reason for the last reset.
+#define WATCHDOG_SCRATCH0               (*((volatile uint32_t *)(WATCHDOG_BASE+0x0c))) // Scratch register
+#define WATCHDOG_SCRATCH1               (*((volatile uint32_t *)(WATCHDOG_BASE+0x10))) // Scratch register
+#define WATCHDOG_SCRATCH2               (*((volatile uint32_t *)(WATCHDOG_BASE+0x14))) // Scratch register
+#define WATCHDOG_SCRATCH3               (*((volatile uint32_t *)(WATCHDOG_BASE+0x18))) // Scratch register
+#define WATCHDOG_SCRATCH4               (*((volatile uint32_t *)(WATCHDOG_BASE+0x1c))) // Scratch register
+#define WATCHDOG_SCRATCH5               (*((volatile uint32_t *)(WATCHDOG_BASE+0x20))) // Scratch register
+#define WATCHDOG_SCRATCH6               (*((volatile uint32_t *)(WATCHDOG_BASE+0x24))) // Scratch register
+#define WATCHDOG_SCRATCH7               (*((volatile uint32_t *)(WATCHDOG_BASE+0x28))) // Scratch register
+#define WATCHDOG_TICK                   (*((volatile uint32_t *)(WATCHDOG_BASE+0x2c))) // Controls the tick generator
+#define WATCHDOG_TICK_SET               (*((volatile uint32_t *)(WATCHDOG_BASE+0x202c))) // Controls the tick generator
+#define WATCHDOG_TICK_CLR               (*((volatile uint32_t *)(WATCHDOG_BASE+0x302c))) // Controls the tick generator
+
 // ROSC
 #define ROSC_CTRL                       (*((volatile uint32_t *)(ROSC_BASE+0x00))) // Ring Oscillator control
 #define ROSC_FREQA                      (*((volatile uint32_t *)(ROSC_BASE+0x04))) // Ring Oscillator frequency control A

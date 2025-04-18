@@ -2,7 +2,7 @@
 #include "semaphore.h"
 #include "schedule.h"
 #include "../hw/hwctrl.h"
-
+#include "../hw/gpio.h" // BOZO
 
 void init_semaphore(Sema4_t *sem, int32_t value) {
     sem->value = value;
@@ -11,14 +11,9 @@ void init_semaphore(Sema4_t *sem, int32_t value) {
 
 // blocks until semaphore is acquired
 void b_wait(Sema4_t *sem) {
-    uint32_t stat = start_critical();
     while(atomic_test_and_set(&sem->value)) {
-        //sched_block(sem);
-        enable_interrupts();
-        suspend();
-        disable_interrupts();
-    }
-    end_critical(stat);    
+        sched_block(sem);
+    } 
 }
 
 // unblocks first (if any) thread blocked by this semaphore
@@ -26,9 +21,9 @@ void b_wait(Sema4_t *sem) {
 void b_signal(Sema4_t *sem) {
     uint32_t stat = start_critical();
     atomic_clear(&sem->value);
-    //if (sem->bthreads_root != NULL) {
-    //    if (sched_unblock(sem)) schedule();
-    //}
+    if (sem->bthreads_root != NULL) {
+        if (sched_unblock(sem)) schedule();
+    }
     end_critical(stat);
 }
 

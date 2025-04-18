@@ -36,6 +36,9 @@ typedef enum {
 // configure system clock frequency
 void init_sysclock(void);
 
+// enable watchdog tick (needed for system timer and watchdog interrupts)
+void init_watchdog_tick(void);
+
 // clear reset bit for particular subsystem
 void init_subsystem(subsystem_e sys);
 

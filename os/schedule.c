@@ -117,7 +117,7 @@ void schedule() {
 
     // update current thread / put it back into schedule
     if (RunPt[cpu]->state == RUNNING) {
-        RunPt[cpu]->state == ACTIVE;
+        RunPt[cpu]->state = ACTIVE;
         ActivePriorityCount[RunPt[cpu]->priority]++;
     }
 
@@ -218,7 +218,6 @@ void sched_block(Sema4_t *sem) {
     thread->state = BLOCKED;
 
     // remove RunPt from thread pool
-    ActivePriorityCount[priority]--;
     if (ActivePriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
     } else {
@@ -269,7 +268,7 @@ bool sched_unblock(Sema4_t *sem) {
     // update semaphore blocked list
     sem->bthreads_root = sem->bthreads_root->next_tcb;
 
-    // insert thread into end of active list
+    // insert unblocked thread into beginning of active list
     if (ActivePriorityCount[priority] == 0) {
         ThreadSchedule[priority] = thread;
         thread->next_tcb = thread;
@@ -279,6 +278,7 @@ bool sched_unblock(Sema4_t *sem) {
         ThreadSchedule[priority]->prev_tcb->next_tcb = thread;
         ThreadSchedule[priority]->prev_tcb = thread;
         thread->next_tcb = ThreadSchedule[priority];
+        ThreadSchedule[priority] = thread;
     }
 
     // increment active count for this priority level
@@ -290,7 +290,7 @@ bool sched_unblock(Sema4_t *sem) {
     // determine if this unblocked thread was higher priority 
     // than the thread that signaled it
     uint8_t cpu = proc_id();
-    return (priority > RunPt[cpu]->priority);
+    return (priority >= RunPt[cpu]->priority);
 }
 
 // sleeps thread for <sleep_time> ms
@@ -313,7 +313,6 @@ void kill(void) {
     // lock scheduler
     sched_lock();
     // remove RunPt from thread pool
-    ActivePriorityCount[priority]--;
     if (ActivePriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
     } else {

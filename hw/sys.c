@@ -17,7 +17,7 @@ void init_sysclock(void) {
     PLL_SYS_PRIM = 0x62000; // set up post dividers (POSTDIV1 = 6, POSTDIV2 = 2)
     PLL_SYS_PWR_CLR = 0x8; // turn on post dividers
 
-    // switch reference clock source to XOSC (not required)
+    // switch reference clock source to XOSC
     CLK_REF_CTRL = 2;
     while (!CLK_REF_SELECTED); // wait for glitchless mux to switch clock source
 
@@ -33,7 +33,13 @@ void init_sysclock(void) {
     ROSC_CTRL = (0xd1e << 12);
 }
 
+void init_watchdog_tick(void) {
+    WATCHDOG_TICK_SET = 12; // 12MHz XOSC / 12 = 1Mhz (1us) tick
+    WATCHDOG_TICK_SET = (0x1 << 9); // enable watchdog
+    while (!(WATCHDOG_TICK & (0x1<<10))); // wait for watchdog tick to start
+}
+
 void init_subsystem(subsystem_e sys) {
-    RESET_CLR = (1U << sys); // pull subsystem out of reset
-    while (!(RESET_DONE & (1U << sys))); // wait for subsystem to complete reset
+    RESET_CLR = (0x1 << sys); // pull subsystem out of reset
+    while (!(RESET_DONE & (0x1 << sys))); // wait for subsystem to complete reset
 }
