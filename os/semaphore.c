@@ -2,7 +2,6 @@
 #include "semaphore.h"
 #include "schedule.h"
 #include "../hw/hwctrl.h"
-#include "../hw/gpio.h" // BOZO
 
 void init_semaphore(Sema4_t *sem, int32_t value) {
     sem->value = value;

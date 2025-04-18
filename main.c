@@ -3,6 +3,7 @@
 #include "hw/gpio.h"
 #include "hw/sys.h"
 #include "../hw/hwctrl.h"
+#include "../hw/uart.h"
 #include "os/semaphore.h"
 
 
@@ -36,15 +37,17 @@ void heapthrash(void) {
 
 
 void main(void) {
+    init_uart();
+
     add_thread(&basict,128,1);
-    add_thread(&basict,128,1);
-    add_thread(&basict,128,1);
-    add_thread(&basict,128,1);
-    add_thread(&heapthrash,128,1);
-    add_thread(&heapthrash,128,1);
+    //add_thread(&basict,128,1);
+    //add_thread(&basict,128,1);
+    //add_thread(&basict,128,1);
+    //add_thread(&heapthrash,128,1);
+    //add_thread(&heapthrash,128,1);
     
     // initialize scheduler (starts OS, never returns)
-    init_scheduler(1, true);
+    init_scheduler(1, false);
 }
 
 

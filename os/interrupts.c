@@ -3,6 +3,7 @@
 #include "../inc/rp2040.h"
 #include "../hw/hwctrl.h"
 #include "../hw/sys.h"
+#include "../hw/uart.h"
 #include "../hw/gpio.h"
 #include "../os/schedule.h"
 
@@ -27,12 +28,13 @@ void reset_handler(void);
 void hardfault_handler(void);
 void pendSV_handler(void);
 void systick_handler(void);
-
+void uart0_handler(void);
 
 // vector table
 __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
 {
     (void *)CPU0_STACK_TOP, //  0 stack pointer
+    // System Exceptions
     reset_handler,          //  1 reset
     default_isr,            //  2 NMI
     hardfault_handler,      //  3 hardFault
@@ -48,6 +50,33 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
     0,                      // 13 reserved
     pendSV_handler,         // 14 pendSV
     systick_handler,        // 15 sysTick
+    // Interrupts
+    0,                      //  0 TIMER_IRQ_0
+    0,                      //  1 TIMER_IRQ_1
+    0,                      //  2 TIMER_IRQ_2
+    0,                      //  3 TIMER_IRQ_3
+    0,                      //  4 PWM_IRQ_WRAP
+    0,                      //  5 USBCTRL_IRQ
+    0,                      //  6 XIP_IRQ
+    0,                      //  7 PIO0_IRQ_0
+    0,                      //  8 PIO0_IRQ_1
+    0,                      //  9 PIO1_IRQ_0
+    0,                      // 10 PIO1_IRQ_1
+    0,                      // 11 DMA_IRQ_0
+    0,                      // 12 DMA_IRQ_1
+    0,                      // 13 IO_IRQ_BANK0
+    0,                      // 14 IO_IRQ_QSPI
+    0,                      // 15 SIO_IRQ_PROC0
+    0,                      // 16 SIO_IRQ_PROC1
+    0,                      // 17 CLOCKS_IRQ
+    0,                      // 18 SPI0_IRQ
+    0,                      // 19 SPI1_IRQ
+    uart0_handler,          // 20 UART0_IRQ
+    0,                      // 21 UART1_IRQ
+    0,                      // 22 ADC_IRQ_FIFO
+    0,                      // 23 I2C0_IRQ
+    0,                      // 24 I2C1_IRQ
+    0,                      // 25 RTC_IRQ
 };
 
 
@@ -184,6 +213,20 @@ __attribute__((naked)) void pendSV_handler(void) {
 // systick interrupt service routine
 void systick_handler(void) {
     schedule();
+}
+
+void uart0_handler(void) {
+    uint32_t intstat = UART0_UARTRIS;
+    if (intstat & (0x1 << 5)) {
+        uart_tx_interrupt();
+        //UART0_UARTICR = (0x1 << 5);
+    } else if (intstat & ((0x1 << 4) | (0x1 << 6))) {
+        uart_rx_interrupt();
+        //UART0_UARTICR = (0x1 << 4);
+    }
+
+    // acknowledge interrupt
+    NVIC_ICPR = 0x1 << UART0_IRQ;
 }
 
 void default_isr(void) {
