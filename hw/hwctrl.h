@@ -36,4 +36,23 @@ static inline void wait_for_interrupt(void){
     __asm volatile ("WFI");
 }
 
+// returns 0 if lock was acquired
+static inline uint32_t atomic_test_and_set(uint32_t *lock) {
+    uint32_t primask = start_critical();
+    while (!SPINLOCK31);
+    uint32_t rv = *lock;
+    *lock = 1;
+    SPINLOCK31 = 1;
+    end_critical(primask);
+    return rv;
+}
+
+static inline void atomic_clear(uint32_t *lock) {
+    uint32_t primask = start_critical();
+    while (!SPINLOCK31);
+    *lock = 0;
+    SPINLOCK31 = 1;
+    end_critical(primask);
+}
+
 #endif // HW_CTRL_H

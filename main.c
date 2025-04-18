@@ -2,56 +2,85 @@
 #include "os/schedule.h"
 #include "hw/gpio.h"
 #include "hw/sys.h"
-
+#include "../hw/hwctrl.h"
 #include "os/semaphore.h"
-#include "os/ipc.h" // test
 
 
-// debug
-void Thread1(void){
-    init_gpio(3, GPIO_OUTPUT);
-    for(;;){
+
+static uint32_t gpio = 2;
+
+void basict(void){
+    disable_interrupts();
+    uint32_t pin = gpio++;
+    init_gpio(pin, GPIO_OUTPUT);
+    enable_interrupts();
+    while (1) {
         if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
-        gpio_toggle(3);
+        gpio_toggle(pin);
     }
 }
-void Thread2(void){
-    init_gpio(4, GPIO_OUTPUT);
-    for(;;){
-        if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
-        gpio_toggle(4);
+
+void heapthrash(void) {
+    disable_interrupts();
+    uint32_t pin = gpio++;
+    init_gpio(pin, GPIO_OUTPUT);
+    enable_interrupts();
+    void *memptr;
+    while (1) {
+        gpio_set(pin);
+        memptr = malloc(1024);
+        gpio_clear(pin);
+        free(memptr);
     }
 }
-void Thread3(void){
-    init_gpio(5, GPIO_OUTPUT);
-    for(;;){
-        if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
-        gpio_toggle(5);
-    }
-}
-void Thread4(void){
-    init_gpio(6, GPIO_OUTPUT);
-    for(;;){
-        if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
-        gpio_toggle(6);
-    }
-}
-// end debug
 
 
 void main(void) {
+    add_thread(&basict,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&heapthrash,128,1);
+    add_thread(&heapthrash,128,1);
 
-    init_gpio(25, GPIO_OUTPUT);
-    
-    add_thread(&Thread1,128,1);
-    add_thread(&Thread2,128,1);
-    //add_thread(&Thread3,128,1);
-    //add_thread(&Thread4,128,1);
-    //add_thread(&Thread2,128,1);
-    //add_thread(&Thread3,128,1);
     
     // initialize scheduler (starts OS, never returns)
-    init_scheduler(1, true); // 126ms timeslice (maximum at 133MHz clock)
-
-    for (;;) {}
+    init_scheduler(1, true);
 }
+
+
+/********************* basic scheduler test *********************/
+/* 
+static uint32_t gpio = 2;
+
+void basict(void){
+    uint32_t pin = gpio++;
+    init_gpio(pin, GPIO_OUTPUT);
+    while (1) {
+        if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
+        gpio_toggle(pin);
+    }
+}
+
+void threadthrash(void) {
+    uint32_t pin = gpio++;
+    init_gpio(pin, GPIO_OUTPUT);
+    while (1) {
+        gpio_toggle(pin);
+        suspend();
+    }
+}
+
+void main(void) {
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    add_thread(&threadthrash,128,1);
+    
+    // initialize scheduler (starts OS, never returns)
+    init_scheduler(1, true);
+} */

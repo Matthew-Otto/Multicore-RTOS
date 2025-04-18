@@ -6,13 +6,16 @@
 #include "ipc.h"
 #include "semaphore.h"
 
+#include "../hw/gpio.h"
+
 
 extern void (*vector_table[])(void);
 
 #define NUM_CORES 2
-volatile TCB_t *RunPt[NUM_CORES] = {NULL};
-volatile TCB_t *NextRunPt[NUM_CORES] = {NULL};
-volatile TCB_t *IdleThread[NUM_CORES] = {NULL};
+TCB_t RunPtBlackHole = {.state=DEAD};
+TCB_t *RunPt[NUM_CORES] = {NULL};
+TCB_t *NextRunPt[NUM_CORES] = {NULL};
+TCB_t *IdleThread[NUM_CORES] = {NULL};
 
 // Memory shared by both cores. must be accesses with mutex
 #define PRIORITY_LVL_CNT 5
@@ -28,11 +31,14 @@ static void core1_entry(void);
 void init_scheduler(uint32_t timeslice, bool multicore) {
     uint8_t cpu = proc_id();
 
+
+    //gpio_set(5); // BOZO DEBUG
+    //gpio_clear(5); // BOZO DEBUG
+
     // initialize systick timer
     #define CLK_RATE 133000000 // 133Mhz
     SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
     SYST_CSR = 0x7; // use processor clock, enable systick interrupts, enable systick timer
-
 
     // wake CPU1
     if (cpu == 0 && multicore) {
@@ -55,28 +61,28 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         multicore_fifo_push_blocking(timeslice);
     }
 
+    // must use scheduler lock here because blocking semaphores are not ready yet
+    sched_lock();
 
     // initialize idle task
     TCB_t *idle_tcb = (TCB_t *)malloc(sizeof(TCB_t));
     if (idle_tcb == NULL) return;
-    uint32_t *stack = (uint32_t *)malloc(32*sizeof(uint32_t));
+    uint8_t *stack = (uint8_t *)malloc(128);
     if (stack == NULL) return;
     idle_tcb->id = 0;
     idle_tcb->priority = PRIORITY_LVL_CNT; // special last prioirity
     idle_tcb->state = IDLE;
     idle_tcb->stack = stack;
     // initialize idle thread stack
-    idle_tcb->stack[32-1] = 0x01000000;            // PSR
-    idle_tcb->stack[32-2] = (uint32_t)idle_thread; // PC (function pointer)
-    idle_tcb->stack[0] = 0xDEADBEEF;               // magic value for stack overflow detection
-    idle_tcb->sp = &idle_tcb->stack[32-16];        // set thread SP
+    *(uint32_t *)&stack[128-4] = 0x01000000;            // PSR
+    *(uint32_t *)&stack[128-8] = (uint32_t)idle_thread; // PC (function pointer)
+    *(uint32_t *)stack = 0xDEADBEEF;                    // magic value for stack overflow detection
+    idle_tcb->sp = &stack[128-64];                      // set thread SP
     IdleThread[cpu] = idle_tcb;
     ActivePriorityCount[IDLE_PRIORITY] = 1;
 
-
     // launch threads on both cpus
     // select first thread
-    sched_lock();
     uint8_t pri = 0;
     while (ActivePriorityCount[pri] == 0) { 
       pri++;
@@ -103,17 +109,11 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
 }
 
 // schedules next task
-void schedule(void) {
-    sched_lock();
+void schedule() {
     uint32_t primask = start_critical();
+    sched_lock();
 
     uint8_t cpu = proc_id();
-
-
-    // ...
-    // TODO sleeping
-    // TODO blocking
-    // TODO kill
 
     // update current thread / put it back into schedule
     if (RunPt[cpu]->state == RUNNING) {
@@ -122,7 +122,7 @@ void schedule(void) {
     }
 
     // Schedule next thread
-    // find highest priority level with at least one active thread
+    // find highest priority level with at least one active (but not running) thread
     uint8_t pri = 0;
     while (ActivePriorityCount[pri] == 0) { 
         pri++;
@@ -145,8 +145,8 @@ void schedule(void) {
 
 // add new thread to schedule
 uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
-    sched_lock();
     uint32_t primask = start_critical();
+    sched_lock();
 
     if (priority >= PRIORITY_LVL_CNT) return 1;
 
@@ -156,9 +156,10 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
         end_critical(primask);
         return 1;
     }
-    uint32_t *stack = (uint32_t *)malloc(stack_size*sizeof(uint32_t));
+    uint8_t *stack = (uint8_t *)malloc(stack_size);
     if (stack == NULL) {
       free(newtcb);
+      sched_release();
       end_critical(primask);
       return 1;
     }
@@ -170,10 +171,10 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     newtcb->stack = stack;
 
     // initialize thread stack
-    newtcb->stack[stack_size-1] = 0x01000000;     // PSR
-    newtcb->stack[stack_size-2] = (uint32_t)task; // PC (function pointer)
-    newtcb->stack[0] = 0xDEADBEEF;                // magic value for stack overflow detection
-    newtcb->sp = &newtcb->stack[stack_size-16];    // set thread SP
+    *(uint32_t *)&stack[stack_size-4] = 0x01000000;     // PSR
+    *(uint32_t *)&stack[stack_size-8] = (uint32_t)task; // PC (function pointer)
+    *(uint32_t *)stack = 0xDEADBEEF;                    // magic value for stack overflow detection
+    newtcb->sp = &stack[stack_size-64];                 // set thread SP
 
     // add thread to schedule
     if (ThreadSchedule[priority] == NULL) {
@@ -198,19 +199,138 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     return 0;
 }
 
-// schedules next thread
+// schedule next thread
+// simple alias for schedule()
 void suspend(void) {
+    schedule();
+}
 
+// remove thread from schedule
+void sched_block(Sema4_t *sem) {
+    uint32_t primask = start_critical();
+    sched_lock();
+
+    uint8_t cpu = proc_id();
+    TCB_t *thread = RunPt[cpu];
+    uint8_t priority = thread->priority;
+
+    // set thread state to blocked
+    thread->state = BLOCKED;
+
+    // remove RunPt from thread pool
+    ActivePriorityCount[priority]--;
+    if (ActivePriorityCount[priority] == 0) {
+        ThreadSchedule[priority] = NULL;
+    } else {
+        thread->prev_tcb->next_tcb = thread->next_tcb;
+        thread->next_tcb->prev_tcb = thread->prev_tcb;
+    }
+    thread->next_tcb = NULL;
+
+    // add thread to semaphore
+    if (sem->bthreads_root == NULL) {
+        sem->bthreads_root = thread;
+    } else {
+        // insert tcb into blocked list based on priority
+        TCB_t *blocked_node = sem->bthreads_root;
+        if (thread->priority < blocked_node->priority) {
+            // insert into front of list
+            thread->next_tcb = blocked_node;
+            sem->bthreads_root = thread;
+        } else {
+            while (1) {
+                if (blocked_node->next_tcb == NULL) {
+                    blocked_node->next_tcb = thread;
+                    break;
+                } else if (thread->priority < blocked_node->next_tcb->priority) {
+                    thread->next_tcb = blocked_node->next_tcb;
+                    blocked_node->next_tcb = thread;
+                    break;
+                }
+                blocked_node = blocked_node->next_tcb;
+            }
+        }
+    }
+
+    sched_release();
+    end_critical(primask);
+
+    schedule();
+}
+
+// return thread from schedule
+bool sched_unblock(Sema4_t *sem) {
+    uint32_t primask = start_critical();
+    sched_lock();
+
+    TCB_t *thread = sem->bthreads_root;
+    uint8_t priority = thread->priority;
+
+    // update semaphore blocked list
+    sem->bthreads_root = sem->bthreads_root->next_tcb;
+
+    // insert thread into end of active list
+    if (ActivePriorityCount[priority] == 0) {
+        ThreadSchedule[priority] = thread;
+        thread->next_tcb = thread;
+        thread->prev_tcb = thread;
+    } else {
+        thread->prev_tcb = ThreadSchedule[priority]->prev_tcb;
+        ThreadSchedule[priority]->prev_tcb->next_tcb = thread;
+        ThreadSchedule[priority]->prev_tcb = thread;
+        thread->next_tcb = ThreadSchedule[priority];
+    }
+
+    // increment active count for this priority level
+    ActivePriorityCount[priority]++;
+
+    sched_release();
+    end_critical(primask);
+
+    // determine if this unblocked thread was higher priority 
+    // than the thread that signaled it
+    uint8_t cpu = proc_id();
+    return (priority > RunPt[cpu]->priority);
 }
 
 // sleeps thread for <sleep_time> ms
 void sleep(uint32_t sleep_time) {
+    uint32_t primask = start_critical();
+    sched_lock();
 
+    sched_release();
+    end_critical(primask);
 }
 
 // removes thread from schedule and frees memory
 void kill(void) {
+    uint32_t primask = start_critical();
 
+    uint8_t cpu = proc_id();
+    TCB_t *thread = RunPt[cpu];
+    uint8_t priority = thread->priority;
+
+    // lock scheduler
+    sched_lock();
+    // remove RunPt from thread pool
+    ActivePriorityCount[priority]--;
+    if (ActivePriorityCount[priority] == 0) {
+        ThreadSchedule[priority] = NULL;
+    } else {
+        thread->prev_tcb->next_tcb = thread->next_tcb;
+        thread->next_tcb->prev_tcb = thread->prev_tcb;
+    }
+    // release scheduler
+    sched_release();
+    
+    // free memory
+    free(thread->stack);
+    free(thread);
+    // set RunPt to point to a stub so context switch doesnt write to recently freed memory
+    RunPt[cpu] = &RunPtBlackHole;
+    
+    schedule();
+    end_critical(primask);
 }
 
 // stub to grab timeslice from cpu0 and initialize scheduler
@@ -222,11 +342,14 @@ static void core1_entry(void) {
 
 #include "../hw/gpio.h"
 static void idle_thread(void){
-    init_gpio(25, GPIO_OUTPUT);
-    init_gpio(2, GPIO_OUTPUT);
+    uint32_t pin = 2 + proc_id();
+    init_gpio(pin, GPIO_OUTPUT);
     while(1) {
-        gpio_toggle(25);
-        gpio_toggle(2);
-        wait_for_interrupt();
+        for (int i = 1;; i = (i%10)+1) {
+            gpio_toggle(pin);
+            for (int j = 0; j < i; ++j){   
+                wait_for_interrupt();
+            }
+        }
     }
 }

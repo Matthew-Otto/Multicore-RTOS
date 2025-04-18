@@ -120,6 +120,18 @@
 #define WDSEL_CLR                       (*((volatile uint32_t *)(RESETS_BASE+0x3004))) // Watchdog select.
 #define RESET_DONE                      (*((volatile uint32_t *)(RESETS_BASE+0x8))) // Reset done.
 
+// PSM
+#define PSM_FRCE_ON                     (*((volatile uint32_t *)(PSM_BASE+0x0))) // Force block out of reset (i.e. power it on)
+#define PSM_FRCE_ON_SET                 (*((volatile uint32_t *)(PSM_BASE+0x2000))) // Force block out of reset (i.e. power it on)
+#define PSM_FRCE_ON_CLR                 (*((volatile uint32_t *)(PSM_BASE+0x3000))) // Force block out of reset (i.e. power it on)
+#define PSM_FRCE_OFF                    (*((volatile uint32_t *)(PSM_BASE+0x4))) // Force into reset (i.e. power it off)
+#define PSM_FRCE_OFF_SET                (*((volatile uint32_t *)(PSM_BASE+0x2004))) // Force into reset (i.e. power it off)
+#define PSM_FRCE_OFF_CLR                (*((volatile uint32_t *)(PSM_BASE+0x3004))) // Force into reset (i.e. power it off)
+#define PSM_WDSEL                       (*((volatile uint32_t *)(PSM_BASE+0x8))) // Set to 1 if this peripheral should be reset when the watchdog fires.
+#define PSM_WDSEL_SET                   (*((volatile uint32_t *)(PSM_BASE+0x2008))) // Set to 1 if this peripheral should be reset when the watchdog fires.
+#define PSM_WDSEL_CLR                   (*((volatile uint32_t *)(PSM_BASE+0x3008))) // Set to 1 if this peripheral should be reset when the watchdog fires.
+#define PSM_DONE                        (*((volatile uint32_t *)(PSM_BASE+0xc))) // Indicates the peripheral’s registers are ready to access.
+
 // GPIO
 #define IO_GPIO0_STATUS                 (*((volatile uint32_t *)(IO_BANK0_BASE+0x000))) // GPIO status
 #define IO_GPIO0_CTRL                   (*((volatile uint32_t *)(IO_BANK0_BASE+0x004))) // GPIO control including function select and overrides.

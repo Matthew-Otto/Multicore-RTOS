@@ -53,6 +53,11 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
 
 __attribute__((naked)) void reset_handler(void) {
     disable_interrupts();
+
+    // clear spinlocks
+    for (int i = 0; i < 32; ++i) {
+        (*((volatile uint32_t *)(0xD0000100+(i*4)))) = 1;
+    }
     
     // configure clocks
     init_sysclock();
@@ -91,21 +96,29 @@ void hardfault_handler(void) {
 
     int i = 0;
     while (1) {
-        GPIO_OUT_SET = 1 << 25;
-        if (code[i]) {
+        for (int i = 0; i < 3; i++) {
+            gpio_set(25);
             DELAY(10000000);
+            gpio_clear(25);
+            DELAY(10000000);
+        }
+        DELAY(5000000);
+        if (proc_id()) {
+            gpio_set(25);
+            DELAY(5000000);
+            gpio_clear(25);
+            DELAY(5000000);
+            gpio_set(25);
+            DELAY(5000000);
+            gpio_clear(25);
+            DELAY(5000000);
         } else {
+            gpio_set(25);
+            DELAY(5000000);
+            gpio_clear(25);
             DELAY(5000000);
         }
-        GPIO_OUT_CLR = 1 << 25;
-        DELAY(5000000);
-        
-        if (i == (ARRAY_LEN(code)-1)) {
-            i = 0;
-            DELAY(10000000);
-        } else {
-            i++;
-        }
+        DELAY(20000000);
     }
 }
 
