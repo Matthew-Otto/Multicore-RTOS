@@ -3,10 +3,9 @@
 #include "schedule.h"
 #include "../inc/rp2040.h"
 #include "../hw/hwctrl.h"
-#include "ipc.h"
-#include "semaphore.h"
-
-#include "../hw/gpio.h"
+#include "../hw/timer.h"
+#include "../os/ipc.h"
+#include "../os/semaphore.h"
 
 
 extern void (*vector_table[])(void);
@@ -23,6 +22,7 @@ TCB_t *IdleThread[NUM_CORES] = {NULL};
 static uint32_t LifetimeThreadCount = 0;
 static uint16_t ActivePriorityCount[PRIORITY_LVL_CNT+1] = {0}; // count the number of active threads in each priority level
 static TCB_t *ThreadSchedule[PRIORITY_LVL_CNT+1]; // tracks pointers to link-list of each priority schedule
+static TCB_t *SleepScheduleRoot;
 
 // forward declarations
 static void idle_thread(void);
@@ -295,8 +295,94 @@ bool sched_unblock(Sema4_t *sem) {
 
 // sleeps thread for <sleep_time> ms
 void sleep(uint32_t sleep_time) {
+    if (sleep_time == 0) return;
     uint32_t primask = start_critical();
     sched_lock();
+
+    uint8_t cpu = proc_id();
+    TCB_t *thread = RunPt[cpu];
+    uint8_t priority = thread->priority;
+    
+    // calculate when this thread should be re-queued
+    thread->resume_tick = get_raw_time() + (sleep_time * 1000);
+    // update trhead state
+    thread->state = SLEEPING;
+    
+    // remove RunPt from thread pool
+    if (ActivePriorityCount[priority] == 0) {
+        ThreadSchedule[priority] = NULL;
+    } else {
+        thread->prev_tcb->next_tcb = thread->next_tcb;
+        thread->next_tcb->prev_tcb = thread->prev_tcb;
+    }
+    thread->next_tcb = NULL;
+
+    // insert thread into sleep queue and arm timer if necessary
+    if (SleepScheduleRoot == NULL) {
+        SleepScheduleRoot = thread;
+        arm_timer(0, thread->resume_tick);
+    } else {
+        // if current thread will resume before the current head of the list
+        if (thread->resume_tick < SleepScheduleRoot->resume_tick){
+            // insert before SleepScheduleRoot
+            thread->next_tcb = SleepScheduleRoot;
+            SleepScheduleRoot = thread;
+            arm_timer(0, thread->resume_tick);
+        } else {
+            // find where the new sleeping thread belongs
+            TCB_t *node = SleepScheduleRoot;
+            while (1) {
+            if (node->next_tcb == NULL) {
+                node->next_tcb = thread;
+                break;
+            } else if (thread->resume_tick < node->next_tcb->resume_tick) {
+                thread->next_tcb = node->next_tcb;
+                node->next_tcb = thread;
+                break;
+            }
+            node = node->next_tcb;
+            }
+        }
+    }
+
+    sched_release();
+    end_critical(primask);
+
+    schedule();
+}
+
+// unsleeps the first thread in the sleep queue
+void unsleep(void) {
+    uint32_t primask = start_critical();
+    sched_lock();
+
+    TCB_t *resumed_thread = SleepScheduleRoot;
+    SleepScheduleRoot = SleepScheduleRoot->next_tcb;
+
+    // arm timer for next thread
+    if (SleepScheduleRoot != NULL) {
+        // hack to avoid missing threads that will resume soon
+        if (SleepScheduleRoot->resume_tick < (get_raw_time() + 10)) {
+            arm_timer(0, get_raw_time() + 10);
+        } else {
+            arm_timer(0, SleepScheduleRoot->resume_tick);
+        }
+    }
+
+    // insert unslept thread into the front of the queue
+    if ((ActivePriorityCount[resumed_thread->priority] == 0) && (RunPt[proc_id()]->priority != resumed_thread->priority)){
+        ThreadSchedule[resumed_thread->priority] = resumed_thread;
+        resumed_thread->next_tcb = resumed_thread;
+        resumed_thread->prev_tcb = resumed_thread;
+    } else {
+        ThreadSchedule[resumed_thread->priority]->prev_tcb->next_tcb = resumed_thread;
+        resumed_thread->next_tcb = ThreadSchedule[resumed_thread->priority];
+        resumed_thread->prev_tcb = ThreadSchedule[resumed_thread->priority]->prev_tcb;
+        ThreadSchedule[resumed_thread->priority]->prev_tcb = resumed_thread;
+        ThreadSchedule[resumed_thread->priority] = resumed_thread;
+    }
+    ActivePriorityCount[resumed_thread->priority]++;
+    resumed_thread->state = ACTIVE;
 
     sched_release();
     end_critical(primask);

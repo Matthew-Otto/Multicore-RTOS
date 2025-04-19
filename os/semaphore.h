@@ -33,10 +33,10 @@ void b_signal(Sema4_t *sem);
 
 // decrements semaphore
 // blocks until semaphore is acquired
-void wait(Sema4_t *sem);
+void c_wait(Sema4_t *sem);
 
 // increments semaphore
 // unblocks first (if any) thread blocked by this semaphore
-void signal(Sema4_t *sem);
+void c_signal(Sema4_t *sem);
 
 #endif // SEMA4_H

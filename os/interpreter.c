@@ -1,10 +1,14 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include "../hw/uart.h"
+#include "../hw/timer.h"
+#include "../os/schedule.h"
 
 #define TIME        1564253156U
 #define RESET_TIME  1314397196U
 #define STATS       1781603564U
+#define SLEEP       2313861896U
 #define HELP        946971642U
 
 #define HELP_MESSAGE "\
@@ -41,17 +45,36 @@ void interpreter(void) {
 
         switch (hash(cmd)) {
             case TIME:
-                uart_out_string("idk the time yet\r\n");
+                uint32_t time = get_mstime();
+                snprintf(input_buffer, buffsize, "Time is: %d\r\n", time);
+                uart_out_string(input_buffer);
                 break;
+
             case RESET_TIME:
-                uart_out_string("cant reset something idk\r\n");
+                clear_mstime();
+                uart_out_string("System time reset.\r\n");
                 break;
+
             case STATS:
                 uart_out_string("no stats yet\r\n");
                 break;
+
+            case SLEEP: {
+                uint32_t sleep_time;
+                if(sscanf(args, "%d", &sleep_time) != 1){
+                    uart_out_string("Error: invalid number of arguments\r\n");
+                    break;
+                }
+                snprintf(input_buffer, buffsize, "Sleeping for: %d ms.\r\n", sleep_time);
+                uart_out_string(input_buffer);
+                sleep(sleep_time);
+                break;
+            }
+
             case HELP:
                 uart_out_string(HELP_MESSAGE);
                 break;
+
             default:
                 uart_out_string("Error: unknown command.\r\n");
                 break;

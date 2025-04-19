@@ -28,7 +28,7 @@ void b_signal(Sema4_t *sem) {
 
 // decrements semaphore
 // blocks until semaphore is acquired
-void wait(Sema4_t *sem) {
+void c_wait(Sema4_t *sem) {
     uint32_t stat = start_critical();
     if (sem->value > 0) {
         sem->value--;
@@ -46,7 +46,7 @@ void wait(Sema4_t *sem) {
 
 // increments semaphore
 // unblocks first (if any) thread blocked by this semaphore
-void signal(Sema4_t *sem) {
+void c_signal(Sema4_t *sem) {
     uint32_t stat = start_critical();
     sem->value++;
     if (sem->bthreads_root != NULL) {

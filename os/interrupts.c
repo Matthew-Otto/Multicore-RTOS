@@ -3,6 +3,7 @@
 #include "../inc/rp2040.h"
 #include "../hw/hwctrl.h"
 #include "../hw/sys.h"
+#include "../hw/timer.h"
 #include "../hw/uart.h"
 #include "../hw/gpio.h"
 #include "../os/schedule.h"
@@ -28,6 +29,7 @@ void reset_handler(void);
 void hardfault_handler(void);
 void pendSV_handler(void);
 void systick_handler(void);
+void timer0_interrupt(void);
 void uart0_handler(void);
 
 // vector table
@@ -51,7 +53,7 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
     pendSV_handler,         // 14 pendSV
     systick_handler,        // 15 sysTick
     // Interrupts
-    default_isr,            //  0 TIMER_IRQ_0
+    timer0_interrupt,       //  0 TIMER_IRQ_0
     default_isr,            //  1 TIMER_IRQ_1
     default_isr,            //  2 TIMER_IRQ_2
     default_isr,            //  3 TIMER_IRQ_3
@@ -72,11 +74,11 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
     default_isr,            // 18 SPI0_IRQ
     default_isr,            // 19 SPI1_IRQ
     uart0_handler,          // 20 UART0_IRQ
-    default_isr,                      // 21 UART1_IRQ
-    default_isr,                      // 22 ADC_IRQ_FIFO
-    default_isr,                      // 23 I2C0_IRQ
-    default_isr,                      // 24 I2C1_IRQ
-    default_isr,                      // 25 RTC_IRQ
+    default_isr,            // 21 UART1_IRQ
+    default_isr,            // 22 ADC_IRQ_FIFO
+    default_isr,            // 23 I2C0_IRQ
+    default_isr,            // 24 I2C1_IRQ
+    default_isr,            // 25 RTC_IRQ
 };
 
 
@@ -85,9 +87,6 @@ __attribute__((naked)) void reset_handler(void) {
 
     // configure clocks
     init_sysclock();
-
-    // init tick generator
-    init_watchdog_tick();
 
     // clear spinlocks
     for (int i = 0; i < 32; ++i) {
@@ -106,16 +105,18 @@ __attribute__((naked)) void reset_handler(void) {
     while (bss < &_ebss){
         *bss++ = 0x0;
     }
-    
-    // TODO: reset vector table offset?
-    //VTOR = (uint32_t)vector_table;
-    // TODO: reset stack pointer?
 
     // initialize heap
     heap_init();
 
-    // bozo debug
-    //SPINLOCK0 = 1;
+    // init tick generator
+    init_watchdog_tick();
+
+    // configure system timer
+    init_timer();
+
+    // initialize uart
+    init_uart();
 
     // jump to main
     main();
@@ -201,7 +202,16 @@ void systick_handler(void) {
     schedule();
 }
 
+void timer0_interrupt(void) {
+    // acknowledge interrupt
+    TIMER_INTR = 0x1;
+    NVIC_ICPR = 0x1 << TIMER_IRQ_0;
+    unsleep();
+}
+
 void uart0_handler(void) {
+    // acknowledge interrupt
+    NVIC_ICPR = 0x1 << UART0_IRQ;
     uint32_t intstat = UART0_UARTRIS;
     if (intstat & (0x1 << 5)) {
         uart_tx_interrupt();
@@ -210,9 +220,6 @@ void uart0_handler(void) {
         uart_rx_interrupt();
         UART0_UARTICR = (0x1 << 4);
     }
-
-    // acknowledge interrupt
-    NVIC_ICPR = 0x1 << UART0_IRQ;
 }
 
 void default_isr(void) {

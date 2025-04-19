@@ -46,6 +46,9 @@ bool sched_unblock(Sema4_t *sem);
 // sleeps thread for <sleep_time> ms
 void sleep(uint32_t sleep_time);
 
+// unsleeps the first thread in the sleep queue
+void unsleep(void);
+
 // removes thread from schedule and frees memory
 void kill(void);
 

@@ -24,8 +24,6 @@ void basict(void){
 }
 
 void main(void) {
-    init_uart();
-
     add_thread(&interpreter,1024,1);
     add_thread(&basict,128,1);
     
