@@ -5,11 +5,37 @@
 #include "../hw/hwctrl.h"
 #include "../hw/uart.h"
 #include "os/semaphore.h"
+#include "os/ipc.h"
+#include "os/interpreter.h"
+
 
 
 
 static uint32_t gpio = 2;
+void basict(void){
+    disable_interrupts();
+    uint32_t pin = gpio++;
+    init_gpio(pin, GPIO_OUTPUT);
+    enable_interrupts();
+    while (1) {
+        if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
+        gpio_toggle(pin);
+    }
+}
 
+void main(void) {
+    init_uart();
+
+    add_thread(&interpreter,1024,1);
+    add_thread(&basict,128,1);
+    
+    // initialize scheduler (starts OS, never returns)
+    init_scheduler(1, false);
+}
+
+
+/********************* heap / semaphore test *********************/
+/* 
 void basict(void){
     disable_interrupts();
     uint32_t pin = gpio++;
@@ -37,18 +63,16 @@ void heapthrash(void) {
 
 
 void main(void) {
-    init_uart();
-
     add_thread(&basict,128,1);
-    //add_thread(&basict,128,1);
-    //add_thread(&basict,128,1);
-    //add_thread(&basict,128,1);
-    //add_thread(&heapthrash,128,1);
-    //add_thread(&heapthrash,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&basict,128,1);
+    add_thread(&heapthrash,128,1);
+    add_thread(&heapthrash,128,1);
     
     // initialize scheduler (starts OS, never returns)
-    init_scheduler(1, false);
-}
+    init_scheduler(1, true);
+} */
 
 
 /********************* basic scheduler test *********************/

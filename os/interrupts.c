@@ -51,32 +51,32 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
     pendSV_handler,         // 14 pendSV
     systick_handler,        // 15 sysTick
     // Interrupts
-    0,                      //  0 TIMER_IRQ_0
-    0,                      //  1 TIMER_IRQ_1
-    0,                      //  2 TIMER_IRQ_2
-    0,                      //  3 TIMER_IRQ_3
-    0,                      //  4 PWM_IRQ_WRAP
-    0,                      //  5 USBCTRL_IRQ
-    0,                      //  6 XIP_IRQ
-    0,                      //  7 PIO0_IRQ_0
-    0,                      //  8 PIO0_IRQ_1
-    0,                      //  9 PIO1_IRQ_0
-    0,                      // 10 PIO1_IRQ_1
-    0,                      // 11 DMA_IRQ_0
-    0,                      // 12 DMA_IRQ_1
-    0,                      // 13 IO_IRQ_BANK0
-    0,                      // 14 IO_IRQ_QSPI
-    0,                      // 15 SIO_IRQ_PROC0
-    0,                      // 16 SIO_IRQ_PROC1
-    0,                      // 17 CLOCKS_IRQ
-    0,                      // 18 SPI0_IRQ
-    0,                      // 19 SPI1_IRQ
+    default_isr,            //  0 TIMER_IRQ_0
+    default_isr,            //  1 TIMER_IRQ_1
+    default_isr,            //  2 TIMER_IRQ_2
+    default_isr,            //  3 TIMER_IRQ_3
+    default_isr,            //  4 PWM_IRQ_WRAP
+    default_isr,            //  5 USBCTRL_IRQ
+    default_isr,            //  6 XIP_IRQ
+    default_isr,            //  7 PIO0_IRQ_0
+    default_isr,            //  8 PIO0_IRQ_1
+    default_isr,            //  9 PIO1_IRQ_0
+    default_isr,            // 10 PIO1_IRQ_1
+    default_isr,            // 11 DMA_IRQ_0
+    default_isr,            // 12 DMA_IRQ_1
+    default_isr,            // 13 IO_IRQ_BANK0
+    default_isr,            // 14 IO_IRQ_QSPI
+    default_isr,            // 15 SIO_IRQ_PROC0
+    default_isr,            // 16 SIO_IRQ_PROC1
+    default_isr,            // 17 CLOCKS_IRQ
+    default_isr,            // 18 SPI0_IRQ
+    default_isr,            // 19 SPI1_IRQ
     uart0_handler,          // 20 UART0_IRQ
-    0,                      // 21 UART1_IRQ
-    0,                      // 22 ADC_IRQ_FIFO
-    0,                      // 23 I2C0_IRQ
-    0,                      // 24 I2C1_IRQ
-    0,                      // 25 RTC_IRQ
+    default_isr,                      // 21 UART1_IRQ
+    default_isr,                      // 22 ADC_IRQ_FIFO
+    default_isr,                      // 23 I2C0_IRQ
+    default_isr,                      // 24 I2C1_IRQ
+    default_isr,                      // 25 RTC_IRQ
 };
 
 

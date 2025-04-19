@@ -40,7 +40,7 @@ uint32_t fifo32_get(FIFO32_t *fifo);
 uint32_t fifo32_size(FIFO32_t *fifo);
 
 // single producer, single consumer 8 bit fifo
-FIFO8_t *fifo8_init(uint8_t size);
+FIFO8_t *fifo8_init(uint32_t size);
 uint8_t fifo8_put(FIFO8_t *fifo, uint8_t data);
 uint8_t fifo8_get(FIFO8_t *fifo);
 uint8_t fifo8_size(FIFO8_t *fifo);

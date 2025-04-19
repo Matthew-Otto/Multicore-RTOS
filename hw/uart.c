@@ -1,10 +1,15 @@
 #include <stdint.h>
 #include <math.h>
 #include "../inc/rp2040.h"
-#include "sys.h"
+#include "../hw/sys.h"
+#include "../os/ipc.h"
+#include "../os/schedule.h"
 
 #define PERI_CLK_RATE 133000000
 #define TARGET_BAUD_RATE 115200
+
+static FIFO8_t *tx_fifo;
+static FIFO8_t *rx_fifo;
 
 void init_uart(void) {
     init_subsystem(UART0);
@@ -32,15 +37,66 @@ void init_uart(void) {
     // enable UART interrupt in NVIC
     NVIC_ICPR = 0x1 << UART0_IRQ;
     NVIC_ISER = 0x1 << UART0_IRQ;
+
+    // init software fifos
+    tx_fifo = fifo8_init(256);
+    rx_fifo = fifo8_init(256);
 }
 
-void uart_tx_interrupt(){
-    UART0_UARTICR;
-}
-
-void uart_rx_interrupt(){
-    while (!(UART0_UARTFR & (1 << 4))) {
-        // loopback:
-        UART0_UARTDR = UART0_UARTDR;
+void uart_tx_interrupt() {
+    // WARNING: fifo get blocks when empty (dont block in an interrupt)
+    while (!(UART0_UARTFR & (0x1 << 5)) && fifo8_size(tx_fifo)) {
+        UART0_UARTDR = fifo8_get(tx_fifo);
     }
+}
+
+void uart_rx_interrupt() {
+    while (!(UART0_UARTFR & (0x1 << 4))) {
+        fifo8_put(rx_fifo, UART0_UARTDR);
+    }
+}
+
+void uart_out_byte(uint8_t data) {
+    // if tx_fifo is empty and hardware fifo is not full
+    if (!fifo8_size(tx_fifo) && !(UART0_UARTFR & (0x1 << 5))) {
+        //put directly into hardware TX buffer
+        UART0_UARTDR = data;
+    } else { 
+        // put into software buffer
+        while (fifo8_put(tx_fifo, data));
+    }
+}
+
+void uart_out_string(char *buff) {
+    while (*buff) {
+        uart_out_byte(*buff++);
+    }
+}
+
+// updates the terminal (echos back input)
+void uart_in_string(char *buff, uint32_t buff_size) {
+    uint32_t length = 0;
+    uint8_t inchar;
+    do {
+        inchar = fifo8_get(rx_fifo);
+        
+        if (inchar == '\r') {
+            uart_out_byte('\r');
+            uart_out_byte('\n');
+            break;
+        } else if (inchar == 0x08 || inchar == 0x7F) {
+            if (length) {
+                buff--;
+                length--;
+                uart_out_byte(0x08);
+                uart_out_byte(' ');
+                uart_out_byte(0x08);
+            }
+        } else if (length < buff_size) {
+            *buff++ = inchar;
+            length++;
+            uart_out_byte(inchar);
+        }
+    } while (length < buff_size);
+    *buff = '\0';
 }

@@ -13,7 +13,7 @@ void init_sysclock(void) {
     init_subsystem(PLL_SYS);
     PLL_SYS_FBDIV_INT = 133; // FBDIV = 133
     PLL_SYS_PWR_CLR = 0x21; // turn on main power and VCO
-    while (!(PLL_SYS_CS & (1<<31))); // wait for PLL lock
+    while (!(PLL_SYS_CS & (0x1<<31))); // wait for PLL lock
     PLL_SYS_PRIM = 0x62000; // set up post dividers (POSTDIV1 = 6, POSTDIV2 = 2)
     PLL_SYS_PWR_CLR = 0x8; // turn on post dividers
 
@@ -26,7 +26,7 @@ void init_sysclock(void) {
     while (!CLK_SYS_SELECTED); // wait for glitchless mux to switch clock source
     
     // enable peripheral clock and switch source to PLL
-    CLK_PERI_CTRL = (1 << 11) | (1 << 5);
+    CLK_PERI_CTRL = (0x1 << 11) | (0x1 << 5);
     while (!CLK_PERI_SELECTED); // wait for glitchless mux to switch clock source
     
     // disable ROSC
