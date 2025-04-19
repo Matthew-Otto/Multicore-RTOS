@@ -168,17 +168,14 @@ __attribute__((naked)) void pendSV_handler(void) {
         "ADD    R3, R0, R1\n"       // R3 = address of NextRunPT for current cpu
         // save context
         "PUSH   {R4-R7}\n" 
+        "ADD    SP, SP, #-16\n"
         "MOV    R1, R8\n"
-        "ADD    SP, SP, #-4\n"
-        "STR    R1, [SP]\n"
+        "STR    R1, [SP, #12]\n"
         "MOV    R1, R9\n"
-        "ADD    SP, SP, #-4\n"
-        "STR    R1, [SP]\n"
+        "STR    R1, [SP, #8]\n"
         "MOV    R1, R10\n"
-        "ADD    SP, SP, #-4\n"
-        "STR    R1, [SP]\n"
+        "STR    R1, [SP, #4]\n"
         "MOV    R1, R11\n"
-        "ADD    SP, SP, #-4\n"
         "STR    R1, [SP]\n"
         //save old stack pointer
         "MOV    R1, SP\n"
@@ -193,16 +190,13 @@ __attribute__((naked)) void pendSV_handler(void) {
         // restore context
         "LDR    R1, [SP]\n"
         "MOV    R1, R11\n"
-        "ADD    SP, SP, #4\n"
-        "LDR    R1, [SP]\n"
+        "LDR    R1, [SP, #4]\n"
         "MOV    R1, R10\n"
-        "ADD    SP, SP, #4\n"
-        "LDR    R1, [SP]\n"
+        "LDR    R1, [SP, #8]\n"
         "MOV    R1, R9\n"
-        "ADD    SP, SP, #4\n"
-        "LDR    R1, [SP]\n"
+        "LDR    R1, [SP, #12]\n"
         "MOV    R1, R8\n"
-        "ADD    SP, SP, #4\n"
+        "ADD    SP, SP, #16\n"
         "POP    {R4-R7}\n"
 
         "CPSIE I\n"       // enable interrupts
