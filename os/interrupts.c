@@ -168,15 +168,11 @@ __attribute__((naked)) void pendSV_handler(void) {
         "ADD    R3, R0, R1\n"       // R3 = address of NextRunPT for current cpu
         // save context
         "PUSH   {R4-R7}\n" 
-        "ADD    SP, SP, #-16\n"
-        "MOV    R1, R8\n"
-        "STR    R1, [SP, #12]\n"
-        "MOV    R1, R9\n"
-        "STR    R1, [SP, #8]\n"
-        "MOV    R1, R10\n"
-        "STR    R1, [SP, #4]\n"
-        "MOV    R1, R11\n"
-        "STR    R1, [SP]\n"
+        "MOV    R4, R8\n"
+        "MOV    R5, R9\n"
+        "MOV    R6, R10\n"
+        "MOV    R7, R11\n"
+        "PUSH   {R4-R7}\n"
         //save old stack pointer
         "MOV    R1, SP\n"
         "LDR    R0, [R2]\n"
@@ -188,15 +184,11 @@ __attribute__((naked)) void pendSV_handler(void) {
         "LDR    R1, [R0]\n"
         "MOV    SP, R1\n"
         // restore context
-        "LDR    R1, [SP]\n"
-        "MOV    R1, R11\n"
-        "LDR    R1, [SP, #4]\n"
-        "MOV    R1, R10\n"
-        "LDR    R1, [SP, #8]\n"
-        "MOV    R1, R9\n"
-        "LDR    R1, [SP, #12]\n"
-        "MOV    R1, R8\n"
-        "ADD    SP, SP, #16\n"
+        "POP    {R4-R7}\n"
+        "MOV    R8, R4\n"
+        "MOV    R9, R5\n"
+        "MOV    R10, R6\n"
+        "MOV    R11, R7\n"
         "POP    {R4-R7}\n"
 
         "CPSIE I\n"       // enable interrupts
@@ -213,10 +205,10 @@ void uart0_handler(void) {
     uint32_t intstat = UART0_UARTRIS;
     if (intstat & (0x1 << 5)) {
         uart_tx_interrupt();
-        //UART0_UARTICR = (0x1 << 5);
+        UART0_UARTICR = (0x1 << 5);
     } else if (intstat & ((0x1 << 4) | (0x1 << 6))) {
         uart_rx_interrupt();
-        //UART0_UARTICR = (0x1 << 4);
+        UART0_UARTICR = (0x1 << 4);
     }
 
     // acknowledge interrupt
