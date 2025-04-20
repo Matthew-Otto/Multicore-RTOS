@@ -66,7 +66,11 @@ void interpreter(void) {
             }
 
             case STATS:
-                uart_out_string("no stats yet\r\n");
+                heap_stats_t stats;
+                heap_stats(&stats);
+                snprintf(input_buffer, buffsize, "Heap size: %d\r\nHeap used: %d\r\nHeap free: %d\r\n", 
+                    stats.size, stats.used, stats.free);
+                uart_out_string(input_buffer);
                 break;
 
             case SLEEP: {
