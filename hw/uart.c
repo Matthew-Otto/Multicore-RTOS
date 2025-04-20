@@ -8,8 +8,8 @@
 #define PERI_CLK_RATE 133000000
 #define TARGET_BAUD_RATE 115200
 
-static FIFO8_t *tx_fifo;
-static FIFO8_t *rx_fifo;
+static FIFO_t *tx_fifo;
+static FIFO_t *rx_fifo;
 
 void init_uart(void) {
     init_subsystem(UART0);
@@ -39,31 +39,35 @@ void init_uart(void) {
     NVIC_ISER = 0x1 << UART0_IRQ;
 
     // init software fifos
-    tx_fifo = fifo8_init(256);
-    rx_fifo = fifo8_init(256);
+    tx_fifo = fifo_init(256, 1);
+    rx_fifo = fifo_init(256, 1);
 }
 
 void uart_tx_interrupt() {
     // WARNING: fifo get blocks when empty (dont block in an interrupt)
-    while (!(UART0_UARTFR & (0x1 << 5)) && fifo8_size(tx_fifo)) {
-        UART0_UARTDR = fifo8_get(tx_fifo);
+    uint8_t data;
+    while (!(UART0_UARTFR & (0x1 << 5)) && fifo_size(tx_fifo)) {
+        fifo_get(tx_fifo, &data);
+        UART0_UARTDR = data;
     }
 }
 
 void uart_rx_interrupt() {
+    uint8_t data;
     while (!(UART0_UARTFR & (0x1 << 4))) {
-        fifo8_put(rx_fifo, UART0_UARTDR);
+        data = UART0_UARTDR;
+        fifo_put(rx_fifo, &data);
     }
 }
 
 void uart_out_byte(uint8_t data) {
     // if tx_fifo is empty and hardware fifo is not full
-    if (!fifo8_size(tx_fifo) && !(UART0_UARTFR & (0x1 << 5))) {
+    if (!fifo_size(tx_fifo) && !(UART0_UARTFR & (0x1 << 5))) {
         //put directly into hardware TX buffer
         UART0_UARTDR = data;
     } else { 
         // put into software buffer
-        while (fifo8_put(tx_fifo, data));
+        fifo_put(tx_fifo, &data);
     }
 }
 
@@ -78,7 +82,7 @@ void uart_in_string(char *buff, uint32_t buff_size) {
     uint32_t length = 0;
     uint8_t inchar;
     do {
-        inchar = fifo8_get(rx_fifo);
+        fifo_get(rx_fifo, &inchar);
         
         if (inchar == '\r') {
             uart_out_byte('\r');

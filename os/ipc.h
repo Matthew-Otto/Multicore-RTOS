@@ -5,6 +5,7 @@
 #define IPC_H
 
 #include <stdint.h>
+#include "../os/semaphore.h"
 
 /********* inter-core FIFO *********/
 // send data to other core
@@ -14,6 +15,25 @@ uint32_t multicore_fifo_pop_blocking(void);
 // discard data from fifo
 void multicore_fifo_drain(void);
 
+
+/************* MPMC_FIFO *************/
+// blocking fifo with multicore mutex
+typedef struct FIFO FIFO_t;
+struct FIFO {
+    Sema4_t mutex;
+    Sema4_t full;
+    Sema4_t empty;
+    uint32_t size;
+    uint8_t element_size;
+    uint32_t head;
+    uint32_t tail;
+    uint32_t data[];
+};
+
+FIFO_t *fifo_init(uint32_t fifo_size, uint8_t element_size);
+void fifo_put(FIFO_t *fifo, const void *value);
+void fifo_get(FIFO_t *fifo, void *value);
+uint32_t fifo_size(FIFO_t *fifo);
 
 /************* SPSC_FIFO *************/
 // lock free fifo suitable for single-producer single-consumer

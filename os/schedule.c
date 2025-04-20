@@ -62,7 +62,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
     }
 
     // must use scheduler lock here because blocking semaphores are not ready yet
-    sched_lock();
+    lock(SCHEDULER);
 
     // initialize idle task
     TCB_t *idle_tcb = (TCB_t *)malloc(sizeof(TCB_t));
@@ -95,7 +95,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         RunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
     }
-    sched_release();
+    unlock(SCHEDULER);
 
     // launch first task
     __asm ("LDR     R0, [%0]":: "r" (RunPt[cpu])); // Load @ RunPt to get SP
@@ -111,7 +111,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
 // schedules next task
 void schedule() {
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     uint8_t cpu = proc_id();
 
@@ -139,27 +139,27 @@ void schedule() {
     // trigger pendsv interrupt to context switch
     ICSR = 1 << PENDSVSET_OFFSET;
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
 }
 
 // add new thread to schedule
 uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     if (priority >= PRIORITY_LVL_CNT) return 1;
 
     TCB_t *newtcb = (TCB_t *)malloc(sizeof(TCB_t));
     if (newtcb == NULL) {
-        sched_release();
+        unlock(SCHEDULER);
         end_critical(primask);
         return 1;
     }
     uint8_t *stack = (uint8_t *)malloc(stack_size);
     if (stack == NULL) {
       free(newtcb);
-      sched_release();
+      unlock(SCHEDULER);
       end_critical(primask);
       return 1;
     }
@@ -194,7 +194,7 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     }
     ActivePriorityCount[priority]++;
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
     return 0;
 }
@@ -208,7 +208,7 @@ void suspend(void) {
 // remove thread from schedule
 void sched_block(Sema4_t *sem) {
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     uint8_t cpu = proc_id();
     TCB_t *thread = RunPt[cpu];
@@ -251,7 +251,7 @@ void sched_block(Sema4_t *sem) {
         }
     }
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
 
     schedule();
@@ -260,7 +260,7 @@ void sched_block(Sema4_t *sem) {
 // return thread from schedule
 bool sched_unblock(Sema4_t *sem) {
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     TCB_t *thread = sem->bthreads_root;
     uint8_t priority = thread->priority;
@@ -284,7 +284,7 @@ bool sched_unblock(Sema4_t *sem) {
     // increment active count for this priority level
     ActivePriorityCount[priority]++;
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
 
     // determine if this unblocked thread was higher priority 
@@ -297,7 +297,7 @@ bool sched_unblock(Sema4_t *sem) {
 void sleep(uint32_t sleep_time) {
     if (sleep_time == 0) return;
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     uint8_t cpu = proc_id();
     TCB_t *thread = RunPt[cpu];
@@ -345,7 +345,7 @@ void sleep(uint32_t sleep_time) {
         }
     }
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
 
     schedule();
@@ -354,7 +354,7 @@ void sleep(uint32_t sleep_time) {
 // unsleeps the first thread in the sleep queue
 void unsleep(void) {
     uint32_t primask = start_critical();
-    sched_lock();
+    lock(SCHEDULER);
 
     TCB_t *resumed_thread = SleepScheduleRoot;
     SleepScheduleRoot = SleepScheduleRoot->next_tcb;
@@ -384,7 +384,7 @@ void unsleep(void) {
     ActivePriorityCount[resumed_thread->priority]++;
     resumed_thread->state = ACTIVE;
 
-    sched_release();
+    unlock(SCHEDULER);
     end_critical(primask);
 }
 
@@ -397,7 +397,7 @@ void kill(void) {
     uint8_t priority = thread->priority;
 
     // lock scheduler
-    sched_lock();
+    lock(SCHEDULER);
     // remove RunPt from thread pool
     if (ActivePriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
@@ -406,7 +406,7 @@ void kill(void) {
         thread->next_tcb->prev_tcb = thread->prev_tcb;
     }
     // release scheduler
-    sched_release();
+    unlock(SCHEDULER);
     
     // free memory
     free(thread->stack);

@@ -24,7 +24,69 @@ void multicore_fifo_drain(void) {
     }
 }
 
-/************* FIFO *************/
+
+/************* MPMC_FIFO *************/
+// blocking fifo with multicore mutex
+
+FIFO_t *fifo_init(uint32_t fifo_size, uint8_t element_size) {
+    size_t size = sizeof(FIFO_t) + fifo_size * element_size;
+
+    FIFO_t *fifo = (FIFO_t*)malloc(size);
+    if (fifo == NULL) return NULL;
+
+    init_semaphore(&fifo->mutex, 0);
+    init_semaphore(&fifo->full, fifo_size);
+    init_semaphore(&fifo->empty, 0);
+
+    fifo->head = 0;
+    fifo->tail = 0;
+    fifo->size = size;
+    fifo->element_size = element_size;
+    return fifo;
+}
+
+void fifo_put(FIFO_t *fifo, const void *value) {
+    c_wait(&fifo->full);
+    b_wait(&fifo->mutex);
+
+    void *addr = (uint8_t *)fifo->data + (fifo->tail * fifo->element_size);
+    switch (fifo->element_size) {
+        case 1: *(uint8_t *)addr = *(const uint8_t *)value; break;
+        case 2: *(uint16_t *)addr = *(const uint16_t *)value; break;
+        case 4: *(uint32_t *)addr = *(const uint32_t *)value; break;
+        case 8: *(uint64_t *)addr = *(const uint64_t *)value; break;
+    }
+
+    fifo->tail = (fifo->tail + 1) % fifo->size;
+
+    b_signal(&fifo->mutex);
+    c_signal(&fifo->empty);
+}
+
+void fifo_get(FIFO_t *fifo, void *value) {
+    c_wait(&fifo->empty);
+    b_wait(&fifo->mutex);
+
+    const void *addr = (uint8_t *)fifo->data + (fifo->head * fifo->element_size);
+    switch (fifo->element_size) {
+        case 1: *(uint8_t *)value = *(const uint8_t *)addr; break;
+        case 2: *(uint16_t *)value = *(const uint16_t *)addr; break;
+        case 4: *(uint32_t *)value = *(const uint32_t *)addr; break;
+        case 8: *(uint64_t *)value = *(const uint64_t *)addr; break;
+    }
+    fifo->head = (fifo->head + 1) % fifo->size;
+
+    b_signal(&fifo->mutex);
+    c_signal(&fifo->full);
+}
+
+// returns the number of elements in the fifo
+uint32_t fifo_size(FIFO_t *fifo) {
+    return fifo->empty.value;
+}
+
+
+/************* spsc-FIFO *************/
 // lock free fifo suitable for single-producer single-consumer
 
 // 32 bit ////////////////////////////////////////////////////

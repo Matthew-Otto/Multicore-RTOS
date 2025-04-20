@@ -5,6 +5,14 @@
 #include "../inc/rp2040.h"
 #include "../os/schedule.h"
 
+typedef enum {
+  SCHEDULER = 0,
+  HEAP = 1,
+  UART = 2,
+  BIN_SEMA4 = 29,
+  COUNTING_SEMA4 = 30,
+} lock_t;
+
 typedef struct TCB TCB_t;
 typedef struct Sema4 Sema4_t;
 struct Sema4{
@@ -12,12 +20,14 @@ struct Sema4{
   TCB_t *bthreads_root;
 };
 
-static inline void sched_lock(void) {
-  while (!SPINLOCK0);
+static inline void lock(lock_t lock) {
+  volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
+  while (*spinlock_addr == 0);
 }
 
-static inline void sched_release(void) {
-  SPINLOCK0 = 1;
+static inline void unlock(lock_t lock) {
+  volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
+  *spinlock_addr = 1;
 }
 
 // initializes semaphore

@@ -36,6 +36,7 @@ static inline void wait_for_interrupt(void){
     __asm volatile ("WFI");
 }
 
+// multicore mutex
 // returns 0 if lock was acquired
 static inline uint32_t atomic_test_and_set(uint32_t *lock) {
     uint32_t primask = start_critical();

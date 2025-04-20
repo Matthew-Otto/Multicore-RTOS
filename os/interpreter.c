@@ -17,6 +17,7 @@ help:           print this message\r\n\
 time:           print the current system time\r\n\
 reset_time:     reset the system time\r\n\
 stats:          print various OS diagnostics\r\n\
+sleep <ms>:     sleeps interpreter thread for specified ms\r\n\
 \r\n"
 
 // FNV-1A hash
