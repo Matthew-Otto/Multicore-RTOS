@@ -454,5 +454,5 @@ static void exit_idle(uint8_t cpu_id) {
 
 uint32_t get_idle_percentage(uint8_t cpu_id) {
     uint64_t total_runtime = get_raw_time();
-    return (IdleTime[cpu_id] * 10000 + total_runtime/2) / total_runtime;
+    return (IdleTime[cpu_id] * 1000 + total_runtime/2) / total_runtime;
 }

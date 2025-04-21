@@ -69,8 +69,8 @@ void interpreter(void) {
                 // cpu usage
                 uint32_t cpu0_idle = get_idle_percentage(0);
                 uint32_t cpu1_idle = get_idle_percentage(1);
-                snprintf(input_buffer, buffsize, "CPU0 idle percentage: %d.%d\%\r\nCPU1 idle percentage: %d.%d\%\r\n",
-                        cpu0_idle/100, cpu0_idle%100, cpu1_idle/100, cpu1_idle%100);
+                snprintf(input_buffer, buffsize, "CPU0 idle percentage: %d.%d\r\nCPU1 idle percentage: %d.%d\r\n",
+                        cpu0_idle/10, cpu0_idle%10, cpu1_idle/10, cpu1_idle%10);
                 uart_out_string(input_buffer);
                 // heap stats
                 heap_stats_t stats;
