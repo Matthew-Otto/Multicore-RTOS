@@ -23,6 +23,7 @@ uint64_t IdleTimeStart[NUM_CORES] = {0};
 #define IDLE_PRIORITY PRIORITY_LVL_CNT // alias
 static uint32_t LifetimeThreadCount = 0;
 static uint16_t ActivePriorityCount[PRIORITY_LVL_CNT+1] = {0}; // count the number of active threads in each priority level
+static uint16_t RunningPriorityCount[PRIORITY_LVL_CNT] = {0}; // count the number of running threads in each priority level
 static TCB_t *ThreadSchedule[PRIORITY_LVL_CNT+1]; // tracks pointers to link-list of each priority schedule
 static TCB_t *SleepScheduleRoot;
 
@@ -94,6 +95,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         ThreadSchedule[pri] = RunPt[cpu]->next_tcb; // point root to next element to be scheduled
         RunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
+        RunningPriorityCount[pri]++;
     }
     unlock(SCHEDULER);
 
@@ -123,6 +125,7 @@ void schedule() {
     if (RunPt[cpu]->state == RUNNING) {
         RunPt[cpu]->state = ACTIVE;
         ActivePriorityCount[RunPt[cpu]->priority]++;
+        RunningPriorityCount[RunPt[cpu]->priority]--;
     }
 
     // Schedule next thread
@@ -139,6 +142,7 @@ void schedule() {
         ThreadSchedule[pri] = NextRunPt[cpu]->next_tcb; // point root to next element to be scheduled
         NextRunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
+        RunningPriorityCount[pri]++;
     }
 
     // trigger pendsv interrupt to context switch
@@ -221,9 +225,11 @@ void sched_block(Sema4_t *sem) {
 
     // set thread state to blocked
     thread->state = BLOCKED;
+    RunningPriorityCount[priority]--;
 
     // remove RunPt from thread pool
-    if (ActivePriorityCount[priority] == 0) {
+    // if priority level will be empty after removing this thread
+    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
     } else {
         thread->prev_tcb->next_tcb = thread->next_tcb;
@@ -274,7 +280,7 @@ bool sched_unblock(Sema4_t *sem) {
     sem->bthreads_root = sem->bthreads_root->next_tcb;
 
     // insert unblocked thread into beginning of active list
-    if (ActivePriorityCount[priority] == 0) {
+    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
         ThreadSchedule[priority] = thread;
         thread->next_tcb = thread;
         thread->prev_tcb = thread;
@@ -286,6 +292,8 @@ bool sched_unblock(Sema4_t *sem) {
         ThreadSchedule[priority] = thread;
     }
 
+    // update thread state
+    thread->state = ACTIVE;
     // increment active count for this priority level
     ActivePriorityCount[priority]++;
 
@@ -310,11 +318,12 @@ void sleep(uint32_t sleep_time) {
     
     // calculate when this thread should be re-queued
     thread->resume_tick = get_raw_time() + (sleep_time * 1000);
-    // update trhead state
+    // update thread state
     thread->state = SLEEPING;
+    RunningPriorityCount[priority]--;
     
     // remove RunPt from thread pool
-    if (ActivePriorityCount[priority] == 0) {
+    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
     } else {
         thread->prev_tcb->next_tcb = thread->next_tcb;
@@ -375,7 +384,7 @@ void unsleep(void) {
     }
 
     // insert unslept thread into the front of the queue
-    if ((ActivePriorityCount[resumed_thread->priority] == 0) && (RunPt[proc_id()]->priority != resumed_thread->priority)){
+    if (ActivePriorityCount[resumed_thread->priority] == 0 && RunningPriorityCount[resumed_thread->priority] == 0){
         ThreadSchedule[resumed_thread->priority] = resumed_thread;
         resumed_thread->next_tcb = resumed_thread;
         resumed_thread->prev_tcb = resumed_thread;
@@ -404,7 +413,7 @@ void kill(void) {
     // lock scheduler
     lock(SCHEDULER);
     // remove RunPt from thread pool
-    if (ActivePriorityCount[priority] == 0) {
+    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
         ThreadSchedule[priority] = NULL;
     } else {
         thread->prev_tcb->next_tcb = thread->next_tcb;

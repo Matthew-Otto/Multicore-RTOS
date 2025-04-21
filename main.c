@@ -20,14 +20,15 @@ void basict(void){
     while (1) {
         if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
         gpio_toggle(pin);
-        //sleep(200);
+        //sleep(1);
     }
 }
 
 void main(void) {
     add_thread(&interpreter,1024,1);
-    //add_thread(&basict,256,1);
-    //add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
+
     
     // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);

@@ -88,6 +88,10 @@ __attribute__((naked)) void reset_handler(void) {
     // configure clocks
     init_sysclock();
 
+    // reset cpu1
+    PSM_FRCE_OFF_SET = 0x1 << 16;
+    PSM_FRCE_OFF_CLR = 0x1 << 16;
+
     // clear spinlocks
     for (int i = 0; i < 32; ++i) {
         (*((volatile uint32_t *)(0xD0000100+(i*4)))) = 1;
