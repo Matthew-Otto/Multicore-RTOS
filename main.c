@@ -25,10 +25,10 @@ void basict(void){
 
 void main(void) {
     add_thread(&interpreter,1024,1);
-    //add_thread(&basict,128,1);
+    add_thread(&basict,256,1);
     
     // initialize scheduler (starts OS, never returns)
-    init_scheduler(1, true);
+    init_scheduler(1, false);
 }
 
 

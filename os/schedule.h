@@ -52,4 +52,6 @@ void unsleep(void);
 // removes thread from schedule and frees memory
 void kill(void);
 
+uint32_t get_idle_percentage(uint8_t cpu_id);
+
 #endif // SCHEDULE_H

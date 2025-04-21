@@ -15,6 +15,8 @@ TCB_t RunPtBlackHole = {.state=DEAD};
 TCB_t *RunPt[NUM_CORES] = {NULL};
 TCB_t *NextRunPt[NUM_CORES] = {NULL};
 TCB_t *IdleThread[NUM_CORES] = {NULL};
+uint64_t IdleTime[NUM_CORES] = {0};
+uint64_t IdleTimeStart[NUM_CORES] = {0};
 
 // Memory shared by both cores. must be accesses with mutex
 #define PRIORITY_LVL_CNT 5
@@ -25,15 +27,13 @@ static TCB_t *ThreadSchedule[PRIORITY_LVL_CNT+1]; // tracks pointers to link-lis
 static TCB_t *SleepScheduleRoot;
 
 // forward declarations
-static void idle_thread(void);
 static void core1_entry(void);
+static void idle_thread(void);
+static void enter_idle(uint8_t cpu_id);
+static void exit_idle(uint8_t cpu_id);
 
 void init_scheduler(uint32_t timeslice, bool multicore) {
     uint8_t cpu = proc_id();
-
-
-    //gpio_set(5); // BOZO DEBUG
-    //gpio_clear(5); // BOZO DEBUG
 
     // initialize systick timer
     #define CLK_RATE 133000000 // 133Mhz
@@ -110,10 +110,14 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
 
 // schedules next task
 void schedule() {
+    // update idle time
+    uint8_t cpu = proc_id();
+    if (RunPt[cpu]->state == IDLE) {
+        exit_idle(cpu);
+    }
+
     uint32_t primask = start_critical();
     lock(SCHEDULER);
-
-    uint8_t cpu = proc_id();
 
     // update current thread / put it back into schedule
     if (RunPt[cpu]->state == RUNNING) {
@@ -129,6 +133,7 @@ void schedule() {
     }
     if (pri == IDLE_PRIORITY) {
         NextRunPt[cpu] = IdleThread[cpu];
+        enter_idle(cpu);
     } else {
         NextRunPt[cpu] = ThreadSchedule[pri];
         ThreadSchedule[pri] = NextRunPt[cpu]->next_tcb; // point root to next element to be scheduled
@@ -437,4 +442,17 @@ static void idle_thread(void){
             }
         }
     }
+}
+
+static void enter_idle(uint8_t cpu_id) {
+    IdleTimeStart[cpu_id] = get_raw_time();
+}
+
+static void exit_idle(uint8_t cpu_id) {
+    IdleTime[cpu_id] += get_raw_time() - IdleTimeStart[cpu_id];
+}
+
+uint32_t get_idle_percentage(uint8_t cpu_id) {
+    uint64_t total_runtime = get_raw_time();
+    return (IdleTime[cpu_id] * 10000 + total_runtime/2) / total_runtime;
 }

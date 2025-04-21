@@ -65,13 +65,21 @@ void interpreter(void) {
                     break;
             }
 
-            case STATS:
+            case STATS: {
+                // cpu usage
+                uint32_t cpu0_idle = get_idle_percentage(0);
+                uint32_t cpu1_idle = get_idle_percentage(1);
+                snprintf(input_buffer, buffsize, "CPU0 idle percentage: %d.%d\%\r\nCPU1 idle percentage: %d.%d\%\r\n",
+                        cpu0_idle/100, cpu0_idle%100, cpu1_idle/100, cpu1_idle%100);
+                uart_out_string(input_buffer);
+                // heap stats
                 heap_stats_t stats;
                 heap_stats(&stats);
                 snprintf(input_buffer, buffsize, "Heap size: %d\r\nHeap used: %d\r\nHeap free: %d\r\n", 
                     stats.size, stats.used, stats.free);
                 uart_out_string(input_buffer);
                 break;
+            }
 
             case SLEEP: {
                 uint32_t sleep_time;
