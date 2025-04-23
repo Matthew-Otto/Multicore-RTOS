@@ -7,7 +7,7 @@
 #include "semaphore.h"
 #include "../hw/sys.h"
 
-typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD, IDLE} ThreadState;
+typedef enum {RUNNING = 99, ACTIVE, SLEEPING, BLOCKED, DEAD, IDLE} ThreadState;
 
 typedef struct TCB TCB_t;
 struct TCB {
@@ -51,6 +51,12 @@ void unsleep(void);
 
 // removes thread from schedule and frees memory
 void kill(void);
+
+// add thread to front of queue
+void enqueue_thread(TCB_t *thread);
+
+// remove thread from queue
+void dequeue_thread(TCB_t *thread);
 
 uint32_t get_idle_percentage(uint8_t cpu_id);
 

@@ -112,14 +112,14 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
 
 // schedules next task
 void schedule() {
+    uint32_t primask = start_critical();
+    lock(SCHEDULER);
+
     // update idle time
     uint8_t cpu = proc_id();
     if (RunPt[cpu]->state == IDLE) {
         exit_idle(cpu);
     }
-
-    uint32_t primask = start_critical();
-    lock(SCHEDULER);
 
     // update current thread / put it back into schedule
     if (RunPt[cpu]->state == RUNNING) {
@@ -130,7 +130,7 @@ void schedule() {
 
     // Schedule next thread
     // find highest priority level with at least one active (but not running) thread
-    uint8_t pri = 0;
+    uint32_t pri = 0;
     while (ActivePriorityCount[pri] == 0) { 
         pri++;
     }
@@ -138,8 +138,10 @@ void schedule() {
         NextRunPt[cpu] = IdleThread[cpu];
         enter_idle(cpu);
     } else {
-        NextRunPt[cpu] = ThreadSchedule[pri];
-        ThreadSchedule[pri] = NextRunPt[cpu]->next_tcb; // point root to next element to be scheduled
+        do { // not sure where ThreadSchedule root is getting out of sync. quick hack for now
+            NextRunPt[cpu] = ThreadSchedule[pri];
+            ThreadSchedule[pri] = ThreadSchedule[pri]->next_tcb; // point root to next element to be scheduled
+        } while (NextRunPt[cpu]->state == RUNNING);
         NextRunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
         RunningPriorityCount[pri]++;
@@ -176,7 +178,6 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     LifetimeThreadCount++;
     newtcb->id = LifetimeThreadCount;
     newtcb->priority = priority;
-    newtcb->state = ACTIVE;
     newtcb->stack = stack;
 
     // initialize thread stack
@@ -186,22 +187,7 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
     newtcb->sp = &stack[stack_size-64];                 // set thread SP
 
     // add thread to schedule
-    if (ThreadSchedule[priority] == NULL) {
-        newtcb->next_tcb = newtcb;
-        newtcb->prev_tcb = newtcb;
-        ThreadSchedule[priority] = newtcb;
-    } else {  // insert into end of list  
-        newtcb->prev_tcb = ThreadSchedule[priority]->prev_tcb;
-        ThreadSchedule[priority]->prev_tcb = newtcb;
-        newtcb->prev_tcb->next_tcb = newtcb;
-        newtcb->next_tcb = ThreadSchedule[priority];
-        
-        // immediately schedule new thread if it is the second thread to be added to this priority
-        if (ActivePriorityCount[priority] == 1) {
-            ThreadSchedule[priority] = newtcb;
-        }
-    }
-    ActivePriorityCount[priority]++;
+    enqueue_thread(newtcb);
 
     unlock(SCHEDULER);
     end_critical(primask);
@@ -221,21 +207,11 @@ void sched_block(Sema4_t *sem) {
 
     uint8_t cpu = proc_id();
     TCB_t *thread = RunPt[cpu];
-    uint8_t priority = thread->priority;
-
+    
+    // remove RunPt from thread pool
+    dequeue_thread(thread);
     // set thread state to blocked
     thread->state = BLOCKED;
-    RunningPriorityCount[priority]--;
-
-    // remove RunPt from thread pool
-    // if priority level will be empty after removing this thread
-    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
-        ThreadSchedule[priority] = NULL;
-    } else {
-        thread->prev_tcb->next_tcb = thread->next_tcb;
-        thread->next_tcb->prev_tcb = thread->prev_tcb;
-    }
-    thread->next_tcb = NULL;
 
     // add thread to semaphore
     if (sem->bthreads_root == NULL) {
@@ -268,34 +244,18 @@ void sched_block(Sema4_t *sem) {
     schedule();
 }
 
-// return thread from schedule
+// insert thread into schedule
 bool sched_unblock(Sema4_t *sem) {
     uint32_t primask = start_critical();
     lock(SCHEDULER);
 
     TCB_t *thread = sem->bthreads_root;
-    uint8_t priority = thread->priority;
 
     // update semaphore blocked list
     sem->bthreads_root = sem->bthreads_root->next_tcb;
 
     // insert unblocked thread into beginning of active list
-    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
-        ThreadSchedule[priority] = thread;
-        thread->next_tcb = thread;
-        thread->prev_tcb = thread;
-    } else {
-        thread->prev_tcb = ThreadSchedule[priority]->prev_tcb;
-        ThreadSchedule[priority]->prev_tcb->next_tcb = thread;
-        ThreadSchedule[priority]->prev_tcb = thread;
-        thread->next_tcb = ThreadSchedule[priority];
-        ThreadSchedule[priority] = thread;
-    }
-
-    // update thread state
-    thread->state = ACTIVE;
-    // increment active count for this priority level
-    ActivePriorityCount[priority]++;
+    enqueue_thread(thread);
 
     unlock(SCHEDULER);
     end_critical(primask);
@@ -303,7 +263,7 @@ bool sched_unblock(Sema4_t *sem) {
     // determine if this unblocked thread was higher priority 
     // than the thread that signaled it
     uint8_t cpu = proc_id();
-    return (priority >= RunPt[cpu]->priority);
+    return (thread->priority >= RunPt[cpu]->priority);
 }
 
 // sleeps thread for <sleep_time> ms
@@ -318,18 +278,11 @@ void sleep(uint32_t sleep_time) {
     
     // calculate when this thread should be re-queued
     thread->resume_tick = get_raw_time() + (sleep_time * 1000);
+
+    // remove RunPt from thread pool
+    dequeue_thread(thread);
     // update thread state
     thread->state = SLEEPING;
-    RunningPriorityCount[priority]--;
-    
-    // remove RunPt from thread pool
-    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
-        ThreadSchedule[priority] = NULL;
-    } else {
-        thread->prev_tcb->next_tcb = thread->next_tcb;
-        thread->next_tcb->prev_tcb = thread->prev_tcb;
-    }
-    thread->next_tcb = NULL;
 
     // insert thread into sleep queue and arm timer if necessary
     if (SleepScheduleRoot == NULL) {
@@ -384,19 +337,7 @@ void unsleep(void) {
     }
 
     // insert unslept thread into the front of the queue
-    if (ActivePriorityCount[resumed_thread->priority] == 0 && RunningPriorityCount[resumed_thread->priority] == 0){
-        ThreadSchedule[resumed_thread->priority] = resumed_thread;
-        resumed_thread->next_tcb = resumed_thread;
-        resumed_thread->prev_tcb = resumed_thread;
-    } else {
-        ThreadSchedule[resumed_thread->priority]->prev_tcb->next_tcb = resumed_thread;
-        resumed_thread->next_tcb = ThreadSchedule[resumed_thread->priority];
-        resumed_thread->prev_tcb = ThreadSchedule[resumed_thread->priority]->prev_tcb;
-        ThreadSchedule[resumed_thread->priority]->prev_tcb = resumed_thread;
-        ThreadSchedule[resumed_thread->priority] = resumed_thread;
-    }
-    ActivePriorityCount[resumed_thread->priority]++;
-    resumed_thread->state = ACTIVE;
+    enqueue_thread(resumed_thread);
 
     unlock(SCHEDULER);
     end_critical(primask);
@@ -408,17 +349,12 @@ void kill(void) {
 
     uint8_t cpu = proc_id();
     TCB_t *thread = RunPt[cpu];
-    uint8_t priority = thread->priority;
 
     // lock scheduler
     lock(SCHEDULER);
     // remove RunPt from thread pool
-    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
-        ThreadSchedule[priority] = NULL;
-    } else {
-        thread->prev_tcb->next_tcb = thread->next_tcb;
-        thread->next_tcb->prev_tcb = thread->prev_tcb;
-    }
+    dequeue_thread(thread);
+    thread->state = DEAD;
     // release scheduler
     unlock(SCHEDULER);
     
@@ -432,10 +368,46 @@ void kill(void) {
     end_critical(primask);
 }
 
+void enqueue_thread(TCB_t *thread) {
+    uint8_t priority = thread->priority;
+    // insert thread into beginning of active list
+    if (ThreadSchedule[priority] == NULL) {
+        ThreadSchedule[priority] = thread;
+        thread->next_tcb = thread;
+        thread->prev_tcb = thread;
+    } else {
+        thread->next_tcb = ThreadSchedule[priority];
+        thread->prev_tcb = ThreadSchedule[priority]->prev_tcb;
+        thread->prev_tcb->next_tcb = thread;
+        ThreadSchedule[priority]->prev_tcb = thread;
+        ThreadSchedule[priority] = thread;
+    }
+    // update thread state
+    thread->state = ACTIVE;
+    // increment active count for this priority level
+    ActivePriorityCount[priority]++;
+}
+
+void dequeue_thread(TCB_t *thread) {
+    uint8_t priority = thread->priority;
+    if (thread->state == RUNNING) {
+        RunningPriorityCount[priority]--;
+    }
+    
+    if (ActivePriorityCount[priority] == 0 && RunningPriorityCount[priority] == 0) {
+        ThreadSchedule[priority] = NULL;
+    } else {
+        thread->prev_tcb->next_tcb = thread->next_tcb;
+        thread->next_tcb->prev_tcb = thread->prev_tcb;
+    }
+    thread->next_tcb = NULL;
+}
+
 // stub to grab timeslice from cpu0 and initialize scheduler
 static void core1_entry(void) {
     // get timeslice from cpu0
     uint32_t timeslice = multicore_fifo_pop_blocking();
+    // init cpu1
     init_scheduler(timeslice, false);
 }
 
