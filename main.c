@@ -13,7 +13,7 @@
 
 void basicprop(void){
     volatile uint64_t x = 0;
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
         x = i + x - 1;
         //sleep(1);
@@ -43,8 +43,8 @@ void main(void) {
     add_thread(&basict,256,1);
     add_thread(&basict,256,1);
     add_thread(&basict,256,1);
-    //add_thread(&basicprop,256,1);
-    //add_thread(&basicprop,256,1);
+    add_thread(&basicprop,256,1);
+    add_thread(&basicprop,256,1);
 
     // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);
