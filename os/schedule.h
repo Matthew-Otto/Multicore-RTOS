@@ -7,7 +7,7 @@
 #include "semaphore.h"
 #include "../hw/sys.h"
 
-typedef enum {RUNNING = 99, ACTIVE, SLEEPING, BLOCKED, DEAD, IDLE} ThreadState;
+typedef enum {RUNNING, ACTIVE, SLEEPING, BLOCKED, DEAD, IDLE} ThreadState;
 
 typedef struct TCB TCB_t;
 struct TCB {
@@ -21,7 +21,14 @@ struct TCB {
     uint8_t *stack;
 };
 
+typedef struct {
+    uint16_t running_thread_cnt;
+    uint16_t active_thread_cnt;
+    uint16_t lifetime_thread_cnt;
+} scheduler_stats_t;
+
 typedef struct Sema4 Sema4_t;
+
 
 // initialize cpu1
 // initialize systick timer
@@ -59,5 +66,7 @@ void enqueue_thread(TCB_t *thread);
 void dequeue_thread(TCB_t *thread);
 
 uint32_t get_idle_percentage(uint8_t cpu_id);
+
+void scheduler_stats(scheduler_stats_t *stats);
 
 #endif // SCHEDULE_H

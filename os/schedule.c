@@ -36,11 +36,6 @@ static void exit_idle(uint8_t cpu_id);
 void init_scheduler(uint32_t timeslice, bool multicore) {
     uint8_t cpu = proc_id();
 
-    // initialize systick timer
-    #define CLK_RATE 133000000 // 133Mhz
-    SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
-    SYST_CSR = 0x7; // use processor clock, enable systick interrupts, enable systick timer
-
     // wake CPU1
     if (cpu == 0 && multicore) {
         uint32_t initial_pc1 = (uint32_t)core1_entry | 0x1; // set thumb bit
@@ -62,8 +57,13 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         multicore_fifo_push_blocking(timeslice);
     }
 
-    // must use scheduler lock here because blocking semaphores are not ready yet
+    // lock scheduler before initializing systick to stagger core context switches
     lock(SCHEDULER);
+
+    // initialize systick timer
+    #define CLK_RATE 133000000 // 133Mhz
+    SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
+    SYST_CSR = 0x7; // use processor clock, enable systick interrupts, enable systick timer
 
     // initialize idle task
     TCB_t *idle_tcb = (TCB_t *)malloc(sizeof(TCB_t));
@@ -130,7 +130,7 @@ void schedule() {
 
     // Schedule next thread
     // find highest priority level with at least one active (but not running) thread
-    uint32_t pri = 0;
+    uint8_t pri = 0;
     while (ActivePriorityCount[pri] == 0) { 
         pri++;
     }
@@ -196,9 +196,7 @@ uint32_t add_thread(void(*task)(void), uint32_t stack_size, uint32_t priority) {
 
 // schedule next thread
 // simple alias for schedule()
-void suspend(void) {
-    schedule();
-}
+void suspend(void) __attribute__((alias("schedule")));
 
 // remove thread from schedule
 void sched_block(Sema4_t *sem) {
@@ -328,12 +326,7 @@ void unsleep(void) {
 
     // arm timer for next thread
     if (SleepScheduleRoot != NULL) {
-        // hack to avoid missing threads that will resume soon
-        if (SleepScheduleRoot->resume_tick < (get_raw_time() + 10)) {
-            arm_timer(0, get_raw_time() + 10);
-        } else {
-            arm_timer(0, SleepScheduleRoot->resume_tick);
-        }
+        arm_timer(0, SleepScheduleRoot->resume_tick);
     }
 
     // insert unslept thread into the front of the queue
@@ -436,4 +429,18 @@ static void exit_idle(uint8_t cpu_id) {
 uint32_t get_idle_percentage(uint8_t cpu_id) {
     uint64_t total_runtime = get_raw_time();
     return (IdleTime[cpu_id] * 1000 + total_runtime/2) / total_runtime;
+}
+
+void scheduler_stats(scheduler_stats_t *stats) {
+    uint32_t primask = start_critical();
+    lock(SCHEDULER);
+    stats->running_thread_cnt = 0;
+    stats->active_thread_cnt = 0;
+    for (int i = 0; i < PRIORITY_LVL_CNT; ++i){
+        stats->running_thread_cnt += RunningPriorityCount[i];
+        stats->active_thread_cnt += ActivePriorityCount[i];
+    }
+    stats->lifetime_thread_cnt = LifetimeThreadCount;
+    unlock(SCHEDULER);
+    end_critical(primask);
 }

@@ -77,11 +77,17 @@ void interpreter(void) {
                 snprintf(input_buffer, buffsize, "CPU0 idle percentage: %d.%d\r\nCPU1 idle percentage: %d.%d\r\n",
                         cpu0_idle/10, cpu0_idle%10, cpu1_idle/10, cpu1_idle%10);
                 uart_out_string(input_buffer);
+                // scheduler stats
+                scheduler_stats_t sstats;
+                scheduler_stats(&sstats);
+                snprintf(input_buffer, buffsize, "\r\nRunning Threads: %d\r\nActive Threads: %d\r\nLifetime Threads: %d\r\n", 
+                    sstats.running_thread_cnt, sstats.active_thread_cnt, sstats.lifetime_thread_cnt);
+                uart_out_string(input_buffer);
                 // heap stats
-                heap_stats_t stats;
-                heap_stats(&stats);
-                snprintf(input_buffer, buffsize, "Heap size: %d\r\nHeap used: %d\r\nHeap free: %d\r\n", 
-                    stats.size, stats.used, stats.free);
+                heap_stats_t hstats;
+                heap_stats(&hstats);
+                snprintf(input_buffer, buffsize, "\r\nHeap size: %d\r\nHeap used: %d\r\nHeap free: %d\r\n", 
+                    hstats.size, hstats.used, hstats.free);
                 uart_out_string(input_buffer);
                 break;
             }
