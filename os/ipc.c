@@ -63,7 +63,55 @@ void fifo_put(FIFO_t *fifo, const void *value) {
     c_signal(&fifo->empty);
 }
 
+bool fifo_put_nonblock(FIFO_t *fifo, const void *value) {
+    if ((fifo->tail + 1) % fifo->size == fifo->head) {
+        return 1; // FIFO full
+    }
+    void *addr = (uint8_t *)fifo->data + (fifo->tail * fifo->element_size);
+    switch (fifo->element_size) {
+        case 1: *(uint8_t *)addr = *(const uint8_t *)value; break;
+        case 2: *(uint16_t *)addr = *(const uint16_t *)value; break;
+        case 4: *(uint32_t *)addr = *(const uint32_t *)value; break;
+        case 8: *(uint64_t *)addr = *(const uint64_t *)value; break;
+    }
+    fifo->tail = (fifo->tail + 1) % fifo->size;
+    return 0;
+}
+
 void fifo_get(FIFO_t *fifo, void *value) {
+    c_wait(&fifo->empty);
+    b_wait(&fifo->mutex);
+
+    const void *addr = (uint8_t *)fifo->data + (fifo->head * fifo->element_size);
+    switch (fifo->element_size) {
+        case 1: *(uint8_t *)value = *(const uint8_t *)addr; break;
+        case 2: *(uint16_t *)value = *(const uint16_t *)addr; break;
+        case 4: *(uint32_t *)value = *(const uint32_t *)addr; break;
+        case 8: *(uint64_t *)value = *(const uint64_t *)addr; break;
+    }
+    fifo->head = (fifo->head + 1) % fifo->size;
+
+    b_signal(&fifo->mutex);
+    c_signal(&fifo->full);
+}
+
+bool fifo_get_nonblocking(FIFO_t *fifo, void *value) {
+    if (fifo->head == fifo->tail) return 1; // empty
+
+    const void *addr = (uint8_t *)fifo->data + (fifo->head * fifo->element_size);
+    switch (fifo->element_size) {
+        case 1: *(uint8_t *)value = *(const uint8_t *)addr; break;
+        case 2: *(uint16_t *)value = *(const uint16_t *)addr; break;
+        case 4: *(uint32_t *)value = *(const uint32_t *)addr; break;
+        case 8: *(uint64_t *)value = *(const uint64_t *)addr; break;
+    }
+    fifo->head = (fifo->head + 1) % fifo->size;
+
+    return 0;
+}
+
+
+void fifo_get_spinlock(FIFO_t *fifo, void *value) {
     c_wait(&fifo->empty);
     b_wait(&fifo->mutex);
 
@@ -82,7 +130,15 @@ void fifo_get(FIFO_t *fifo, void *value) {
 
 // returns the number of elements in the fifo
 uint32_t fifo_size(FIFO_t *fifo) {
+    memory_barrier();
     return fifo->empty.value;
+}
+
+uint32_t fifo_size_nonblocking(FIFO_t *fifo) {
+    if (fifo->tail >= fifo->head)
+        return fifo->tail - fifo->head;
+    else
+        return fifo->size - (fifo->head - fifo->tail);
 }
 
 

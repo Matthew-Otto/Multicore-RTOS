@@ -44,10 +44,10 @@ void init_uart(void) {
 }
 
 void uart_tx_interrupt() {
-    // WARNING: fifo get blocks when empty (dont block in an interrupt)
     uint8_t data;
-    while (!(UART0_UARTFR & (0x1 << 5)) && fifo_size(tx_fifo)) {
-        fifo_get(tx_fifo, &data);
+    // while output hw fifo isnt full
+    while (!(UART0_UARTFR & (0x1 << 5))) {
+        if(fifo_get_nonblocking(tx_fifo, &data)) return;
         UART0_UARTDR = data;
     }
 }
@@ -62,12 +62,12 @@ void uart_rx_interrupt() {
 
 void uart_out_byte(uint8_t data) {
     // if tx_fifo is empty and hardware fifo is not full
-    if (!fifo_size(tx_fifo) && !(UART0_UARTFR & (0x1 << 5))) {
+    if (!fifo_size_nonblocking(tx_fifo) && !(UART0_UARTFR & (0x1 << 5))) {
         //put directly into hardware TX buffer
         UART0_UARTDR = data;
     } else { 
         // put into software buffer
-        fifo_put(tx_fifo, &data);
+        while (fifo_put_nonblock(tx_fifo, &data));
     }
 }
 

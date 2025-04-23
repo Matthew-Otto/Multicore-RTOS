@@ -138,10 +138,10 @@ void schedule() {
         NextRunPt[cpu] = IdleThread[cpu];
         enter_idle(cpu);
     } else {
-        do { // not sure where ThreadSchedule root is getting out of sync. quick hack for now
+        //do { // not sure where ThreadSchedule root is getting out of sync. quick hack for now
             NextRunPt[cpu] = ThreadSchedule[pri];
             ThreadSchedule[pri] = ThreadSchedule[pri]->next_tcb; // point root to next element to be scheduled
-        } while (NextRunPt[cpu]->state == RUNNING);
+        //} while (NextRunPt[cpu]->state == RUNNING);
         NextRunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
         RunningPriorityCount[pri]++;
@@ -326,7 +326,7 @@ void unsleep(void) {
 
     // arm timer for next thread
     if (SleepScheduleRoot != NULL) {
-        arm_timer(0, SleepScheduleRoot->resume_tick);
+            arm_timer(0, SleepScheduleRoot->resume_tick);
     }
 
     // insert unslept thread into the front of the queue

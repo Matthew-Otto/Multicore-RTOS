@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "../inc/rp2040.h"
+#include "../hw/hwctrl.h"
 #include "../os/schedule.h"
 
 typedef enum {
@@ -21,13 +22,17 @@ struct Sema4{
 };
 
 static inline void lock(lock_t lock) {
+  memory_barrier();
   volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
-  while (*spinlock_addr == 0);
+  while (*spinlock_addr == 0) memory_barrier();
+  memory_barrier();
 }
 
 static inline void unlock(lock_t lock) {
   volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
+  memory_barrier();
   *spinlock_addr = 1;
+  memory_barrier();
 }
 
 // initializes semaphore

@@ -33,14 +33,18 @@ void c_wait(Sema4_t *sem) {
     uint32_t stat = start_critical();
     lock(COUNTING_SEMA4);
 
+    memory_barrier();
     while (sem->value == 0) {
+        memory_barrier();
         unlock(COUNTING_SEMA4);
         enable_interrupts();
         sched_block(sem);
         disable_interrupts();
         lock(COUNTING_SEMA4);
     }
+    memory_barrier();
     sem->value--;
+    memory_barrier();
 
     unlock(COUNTING_SEMA4);
     end_critical(stat);
@@ -53,6 +57,7 @@ void c_signal(Sema4_t *sem) {
     lock(COUNTING_SEMA4);
 
     sem->value++;
+    memory_barrier();
     if (sem->bthreads_root != NULL) {
         if (sched_unblock(sem)) schedule();
     }

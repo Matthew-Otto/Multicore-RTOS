@@ -218,11 +218,11 @@ void uart0_handler(void) {
     NVIC_ICPR = 0x1 << UART0_IRQ;
     uint32_t intstat = UART0_UARTRIS;
     if (intstat & (0x1 << 5)) {
+        UART0_UARTICR = (0x1 << 5); // acknowledge interrupt
         uart_tx_interrupt();
-        UART0_UARTICR = (0x1 << 5);
     } else if (intstat & ((0x1 << 4) | (0x1 << 6))) {
+        UART0_UARTICR = (0x1 << 4); // acknowledge interrupt
         uart_rx_interrupt();
-        UART0_UARTICR = (0x1 << 4);
     }
 }
 
