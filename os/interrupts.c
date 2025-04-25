@@ -201,12 +201,9 @@ __attribute__((naked)) void pendSV_handler(void) {
     );
 }
 
-#include "../hw/gpio.h"
 // systick interrupt service routine
 void systick_handler(void) {
-    gpio_set(2);
     schedule();
-    gpio_clear(2);
 }
 
 void timer0_interrupt(void) {

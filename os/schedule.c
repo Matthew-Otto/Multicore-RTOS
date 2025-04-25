@@ -8,6 +8,7 @@
 #include "../os/semaphore.h"
 
 
+
 extern void (*vector_table[])(void);
 
 #define NUM_CORES 2
@@ -63,6 +64,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
     // initialize systick timer
     #define CLK_RATE 133000000 // 133Mhz
     SYST_RVR = (CLK_RATE / 1000) * timeslice; // set schedule timeslice (in ms)
+    SYST_CVR = 0;   // clear current countdown value
     SYST_CSR = 0x7; // use processor clock, enable systick interrupts, enable systick timer
 
     // initialize idle task
@@ -92,7 +94,7 @@ void init_scheduler(uint32_t timeslice, bool multicore) {
         RunPt[cpu] = IdleThread[cpu];
     } else {
         RunPt[cpu] = ThreadSchedule[pri];
-        ThreadSchedule[pri] = RunPt[cpu]->next_tcb; // point root to next element to be scheduled
+        ThreadSchedule[pri] = ThreadSchedule[pri]->next_tcb; // point root to next element to be scheduled
         RunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
         RunningPriorityCount[pri]++;
@@ -138,10 +140,12 @@ void schedule() {
         NextRunPt[cpu] = IdleThread[cpu];
         enter_idle(cpu);
     } else {
-        do { // not sure where ThreadSchedule root is getting out of sync. quick hack for now
+        if (ThreadSchedule[pri]->state == RUNNING) {
+            NextRunPt[cpu] = ThreadSchedule[pri]->next_tcb;
+        } else {
             NextRunPt[cpu] = ThreadSchedule[pri];
             ThreadSchedule[pri] = ThreadSchedule[pri]->next_tcb; // point root to next element to be scheduled
-        } while (NextRunPt[cpu]->state == RUNNING);
+        }
         NextRunPt[cpu]->state = RUNNING;
         ActivePriorityCount[pri]--;
         RunningPriorityCount[pri]++;
@@ -397,6 +401,7 @@ void dequeue_thread(TCB_t *thread) {
     } else {
         thread->prev_tcb->next_tcb = thread->next_tcb;
         thread->next_tcb->prev_tcb = thread->prev_tcb;
+        ThreadSchedule[priority] = thread->next_tcb;
     }
     thread->next_tcb = NULL;
 }
