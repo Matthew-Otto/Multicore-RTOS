@@ -20,7 +20,9 @@ void b_wait(Sema4_t *sem) {
 // if unblocked thread is higher priority, schedule it immediately
 void b_signal(Sema4_t *sem) {
     uint32_t stat = start_critical();
+    memory_barrier();
     atomic_clear(&sem->value);
+    memory_barrier();
     if (sem->bthreads_root != NULL) {
         if (sched_unblock(sem)) schedule();
     }

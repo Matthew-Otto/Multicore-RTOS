@@ -14,8 +14,8 @@
 
 
 /********************* dhrystone *********************/
-volatile FIFO_t *ff;
-volatile uint8_t id = 1;
+FIFO_t *ff;
+uint8_t id = 1;
 
 void dhry(void) {
     if (proc_id()) {
@@ -37,11 +37,13 @@ void dhry(void) {
     dry_main();
     fifo_put(ff, &id);
     id++;
-    //while(1);
     kill();
 }
 
 void dhry_twice(void) {
+    char output_buffer[100];
+    uart_out_string("Starting benchmark (2 runs of basic dhrystone).\r\n");
+
     uint32_t tstart = get_raw_time_ms();
     add_thread(&dhry,2048,1);
     add_thread(&dhry,2048,2);
@@ -54,34 +56,92 @@ void dhry_twice(void) {
     uint32_t tend = get_raw_time_ms();
     uint32_t duration = tend - tstart;
 
-    char output_buffer[100];
-    snprintf(output_buffer, 100, "Dhrystonex2 took %d ms.\r\n", duration);
+    snprintf(output_buffer, 100, "Dhrystone x2 took %d ms.\r\n", duration);
 
-    while (1) {
-        uart_out_string(output_buffer);
-        sleep(1000);
-    }
+    uart_out_string(output_buffer);
+    while (1) wait_for_interrupt();
 }
 
 
 
-void main(void) {
+/* void main(void) {
     ff = fifo_init(4, 1);
 
-    gpio_toggle(4);
-    gpio_toggle(4);
-    gpio_toggle(4);
-    gpio_toggle(4);
+    init_gpio(4, GPIO_OUTPUT);
 
     add_thread(&dhry_twice,1024,1);
 
+    init_scheduler(1, false);
+} */
+
+
+/********************* basic priority test *********************/
+
+void high_prior1(void) {
+    init_gpio(4, GPIO_OUTPUT);
+    uint32_t x = 0;
+    while (1) {
+        gpio_toggle(4);
+        x++;
+        if (x == 100000) {
+            x = 0;
+            sleep(2);
+        }
+    }
+}
+void high_prior2(void) {
+    init_gpio(5, GPIO_OUTPUT);
+    uint32_t x = 0;
+    while (1) {
+        gpio_toggle(5);
+        x++;
+        if (x == 100000) {
+            x = 0;
+            sleep(7);
+        }
+    }
+}
+
+void low_prior1(void) {
+    init_gpio(6, GPIO_OUTPUT);
+    while (1) {
+        gpio_toggle(6);
+    }
+}
+void low_prior2(void) {
+    init_gpio(7, GPIO_OUTPUT);
+    while (1) {
+        gpio_toggle(7);
+    }
+}
+void low_prior3(void) {
+    init_gpio(8, GPIO_OUTPUT);
+    while (1) {
+        gpio_toggle(8);
+    }
+}
+void low_prior4(void) {
+    init_gpio(9, GPIO_OUTPUT);
+    while (1) {
+        gpio_toggle(9);
+    }
+}
+
+void main(void) {
+    add_thread(&high_prior1,256,1);
+    add_thread(&high_prior2,256,1);
+    add_thread(&low_prior1,256,2);
+    add_thread(&low_prior2,256,2);
+    add_thread(&low_prior3,256,2);
+    add_thread(&low_prior4,256,2);
+
+    // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);
 }
 
-
 /********************* basic scheduler test *********************/
 
-/* void basicprop(void){
+void basicprop(void){
     volatile uint64_t x = 0;
     for (int i = 0; i < 10000; ++i) {
         if (proc_id()) for (int i = 10; i > 0; i--){__asm ("nop");};
@@ -112,18 +172,18 @@ void basict(void){
     }
 }
 
-void main(void) {
-    init_gpio(8, GPIO_OUTPUT);
-    init_gpio(9, GPIO_OUTPUT);
+/* void main(void) {
+    init_gpio(2, GPIO_OUTPUT);
+    //init_gpio(9, GPIO_OUTPUT);
 
-    //add_thread(&interpreter,1024,1);
+    add_thread(&interpreter,1024,1);
     add_thread(&basict,256,1);
     add_thread(&basict,256,1);
     add_thread(&basict,256,2);
-    //add_thread(&basict,256,1);
-    //add_thread(&basict,256,1);
-    //add_thread(&basict,256,1);
-    //add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
+    add_thread(&basict,256,1);
     //add_thread(&basicprop,256,1);
     //add_thread(&basicprop,256,1);
 

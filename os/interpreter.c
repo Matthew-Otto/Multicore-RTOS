@@ -28,15 +28,11 @@ static inline uint32_t hash(const char *data) {
     return hash;
 }
 
-#include "../hw/gpio.h"
 void interpreter(void) {
     const uint32_t buffsize = 256;
     char input_buffer[buffsize];
     uart_out_string("\x1B[2J\x1B[H");
     uart_out_string("Enter a command:\r\n");
-    
-    init_gpio(3, GPIO_OUTPUT);
-    gpio_toggle(3);
 
     while (1) {
         memset(input_buffer, 0, sizeof(input_buffer));
