@@ -5,6 +5,7 @@
 #define HW_CTRL_H
 
 #include <stdint.h>
+#include "../inc/rp2040.h"
 
 // disable interrupts
 static inline void disable_interrupts(void){
@@ -37,8 +38,7 @@ static inline void wait_for_interrupt(void){
 }
 
 static inline void memory_barrier(void) {
-    __asm volatile ("dsb 0xF" ::: "memory");
-    //__asm volatile ("dmb 0xF" ::: "memory");
+    __asm volatile ("dmb 0xF" ::: "memory");
 }
 
 static inline void data_sync_barrier(void) {

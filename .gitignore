@@ -1,6 +1,7 @@
 .vscode
 .gdb_history
 build
+proposal
 report
 docs
 test*

@@ -25,7 +25,7 @@ static uint32_t LifetimeThreadCount = 0;
 static uint16_t ActivePriorityCount[PRIORITY_LVL_CNT+1] = {0}; // count the number of active threads in each priority level
 static uint16_t RunningPriorityCount[PRIORITY_LVL_CNT] = {0}; // count the number of running threads in each priority level
 static TCB_t *ThreadSchedule[PRIORITY_LVL_CNT+1]; // tracks pointers to link-list of each priority schedule
-static TCB_t *SleepScheduleRoot;
+static TCB_t *SleepScheduleRoot = NULL;
 
 // forward declarations
 static void core1_entry(void);
@@ -272,7 +272,6 @@ void sleep(uint32_t sleep_time) {
 
     uint8_t cpu = proc_id();
     TCB_t *thread = RunPt[cpu];
-    uint8_t priority = thread->priority;
     
     // calculate when this thread should be re-queued
     thread->resume_tick = get_raw_time() + (sleep_time * 1000);
@@ -318,6 +317,7 @@ void sleep(uint32_t sleep_time) {
 
 // unsleeps the first thread in the sleep queue
 void unsleep(void) {
+    if (SleepScheduleRoot == NULL) return; // this shouldn't happen, but just in case
     uint32_t primask = start_critical();
     lock(SCHEDULER);
 

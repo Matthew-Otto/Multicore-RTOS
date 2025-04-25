@@ -21,14 +21,14 @@ INC = -Iinc
 ARMGNU  = arm-none-eabi
 AFLAGS  = --warn --fatal-warnings -mthumb -mcpu=cortex-m0plus -g
 LDFLAGS = -Llib/ -lc -lgcc --gc-sections -Map=$(BUILD)main.map --print-memory-usage
-CFLAGS  = -mthumb -mcpu=cortex-m0plus -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -Og
+CFLAGS  = -mthumb -mcpu=cortex-m0plus -nostartfiles -ffreestanding -g -c -ggdb -std=c99 -O0 #-Og
 PICOTOOL = /usr/local/bin
 
 
 # SRCS: all source files from src directory
-VPATH = . lib inc os hw
+VPATH = . lib inc os hw benchmarks
 H_SRCS = inc/rp2040.h lib/utils.h hw/hwctrl.h
-C_SRCS = $(wildcard *.c) $(wildcard inc/*.c) $(wildcard os/*.c) $(wildcard hw/*.c)
+C_SRCS = $(wildcard *.c) $(wildcard inc/*.c) $(wildcard os/*.c) $(wildcard hw/*.c) $(wildcard benchmarks/*.c)
 S_SRCS = $(wildcard *.s) $(wildcard inc/*.s) $(wildcard os/*.s) $(wildcard hw/*.s)
 # OBJS: list of object files
 C_OBJS = $(addprefix $(BUILD),$(notdir $(C_SRCS:.c=.o)))

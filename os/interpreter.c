@@ -54,7 +54,7 @@ void interpreter(void) {
                 int32_t argcount = sscanf(args, "%s", &s);
                 if (argcount <= 0){
                     uint32_t time = get_mstime();
-                    snprintf(input_buffer, buffsize, "Time is: %d\r\n", time);
+                    snprintf(input_buffer, buffsize, "System uptime: %d ms\r\n", time);
                     uart_out_string(input_buffer);
                     break;
                 } else if (argcount == 1) {
