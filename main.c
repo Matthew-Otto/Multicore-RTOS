@@ -13,55 +13,6 @@
 #include "benchmarks/dry.h"
 
 
-// BOZO DEBUG
-
-void t1(void) {
-    int pin = 4;
-    init_gpio(pin, GPIO_OUTPUT);
-    int i = 0;
-    while (1) {
-        gpio_toggle(pin);
-        i++;
-        if (i == 100000) {
-            i = 0;
-            sleep(3);
-        }
-    }
-}
-void t11(void) {
-    int pin = 5;
-    init_gpio(pin, GPIO_OUTPUT);
-    while (1) {
-        gpio_toggle(pin);
-    }
-}
-void t2(void) {
-    int pin = 6;
-    init_gpio(pin, GPIO_OUTPUT);
-    while (1) {
-        gpio_toggle(pin);
-    }
-}
-void t3(void) {
-    int pin = 7;
-    init_gpio(pin, GPIO_OUTPUT);
-    while (1) {
-        gpio_toggle(pin);
-    }
-}
-
-void main(void) {
-    init_gpio(2, GPIO_OUTPUT);
-
-    add_thread(&t11, 256, 1);
-    add_thread(&t1, 256, 1);
-    add_thread(&t2, 256, 2);
-    add_thread(&t3, 256, 2);
-    init_scheduler(1, true);
-}
-
-
-
 /********************* dhrystone *********************/
 FIFO_t *ff;
 uint8_t id = 1;
@@ -176,7 +127,7 @@ void low_prior4(void) {
     }
 }
 
-/* void main(void) {
+void main(void) {
     add_thread(&high_prior1,2048,1);
     add_thread(&high_prior2,2048,1);
     add_thread(&low_prior1,2048,2);
@@ -186,7 +137,7 @@ void low_prior4(void) {
 
     // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);
-} */
+}
 
 /********************* basic scheduler test *********************/
 

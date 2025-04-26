@@ -4,8 +4,6 @@
 #include "semaphore.h"
 #include "../lib/utils.h"
 
-// BOZO TODO: lock heap from simul multicore access
-
 static uint8_t heap[HEAP_SIZE];
 static uint8_t* heap_ptr = heap;
 static void* heap_tree[HEAP_TREE_NODE_CNT] = {0};
