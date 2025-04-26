@@ -8,31 +8,32 @@
 
 typedef enum {
   SCHEDULER = 0,
-  HEAP = 1,
-  UART = 2,
+  BGSCHEDULER = 1,
+  HEAP = 2,
+  UART = 3,
   BIN_SEMA4 = 29,
   COUNTING_SEMA4 = 30,
-} lock_t;
+} lock_e;
 
 typedef struct TCB TCB_t;
 typedef struct Sema4 Sema4_t;
 struct Sema4{
-  int32_t value;   
-  TCB_t *bthreads_root;
+    int32_t value;   
+    TCB_t *bthreads_root;
 };
 
-static inline void lock(lock_t lock) {
-  memory_barrier();
-  volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
-  while (*spinlock_addr == 0) memory_barrier();
-  memory_barrier();
+static inline void lock(lock_e lock) {
+    memory_barrier();
+    volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
+    while (*spinlock_addr == 0) memory_barrier();
+    memory_barrier();
 }
 
-static inline void unlock(lock_t lock) {
-  volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
-  memory_barrier();
-  *spinlock_addr = 1;
-  memory_barrier();
+static inline void unlock(lock_e lock) {
+    volatile uint32_t *spinlock_addr = (volatile uint32_t *)(0xd0000100+(lock<<2));
+    memory_barrier();
+    *spinlock_addr = 1;
+    memory_barrier();
 }
 
 // initializes semaphore

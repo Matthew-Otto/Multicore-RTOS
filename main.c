@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "os/schedule.h"
+#include "os/periodic.h"
 #include "hw/gpio.h"
 #include "hw/sys.h"
 #include "hw/hwctrl.h"
@@ -11,7 +12,6 @@
 #include "os/interpreter.h"
 
 #include "benchmarks/dry.h"
-
 
 /********************* dhrystone *********************/
 FIFO_t *ff;
@@ -71,9 +71,33 @@ void dhry_twice(void) {
 
     add_thread(&dhry_twice,1024,1);
 
-    init_scheduler(1, false);
+    init_scheduler(1, true);
 } */
 
+
+/********************* periodic *********************/
+
+void periodic_t1(void) {
+    uart_out_string("periodic task1 exec.\r\n");
+}
+void periodic_t2(void) {
+    uart_out_string("periodic task2 exec.\r\n");
+}
+void periodic_t3(void) {
+    uart_out_string("periodic task3 exec.\r\n");
+}
+
+void main(void) {
+    init_gpio(4, GPIO_OUTPUT);
+
+    add_periodic_task(&periodic_t1, 1000);
+    add_periodic_task(&periodic_t2, 3000);
+    add_periodic_task(&periodic_t3, 4000);
+
+    add_thread(&interpreter,512,1);
+
+    init_scheduler(1, false);
+}
 
 /********************* basic priority test *********************/
 
@@ -127,7 +151,7 @@ void low_prior4(void) {
     }
 }
 
-void main(void) {
+/* void main(void) {
     add_thread(&high_prior1,2048,1);
     add_thread(&high_prior2,2048,1);
     add_thread(&low_prior1,2048,2);
@@ -137,7 +161,7 @@ void main(void) {
 
     // initialize scheduler (starts OS, never returns)
     init_scheduler(1, true);
-}
+} */
 
 /********************* basic scheduler test *********************/
 

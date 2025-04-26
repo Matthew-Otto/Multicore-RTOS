@@ -5,10 +5,17 @@
 
 #include <stdint.h>
 
+typedef enum {
+    SLEEP = 0,
+    PERIODIC = 1,
+    TIMER2,
+    TIMER3,
+} timer_e;
+
 void init_timer(void);
 
 // sets alarm<alarm_id> to trigger in <duration> ms in the future
-void arm_timer(uint8_t alarm_id, uint32_t alarm_value);
+void arm_timer(timer_e alarm_id, uint32_t alarm_value);
 
 // get raw time in usec
 uint64_t get_raw_time(void);

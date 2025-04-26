@@ -288,14 +288,14 @@ void sleep(uint32_t sleep_time) {
     // insert thread into sleep queue and arm timer if necessary
     if (SleepScheduleRoot == NULL) {
         SleepScheduleRoot = thread;
-        arm_timer(0, thread->resume_tick);
+        arm_timer(SLEEP, thread->resume_tick);
     } else {
         // if current thread will resume before the current head of the list
         if (thread->resume_tick < SleepScheduleRoot->resume_tick){
             // insert before SleepScheduleRoot
             thread->next_tcb = SleepScheduleRoot;
             SleepScheduleRoot = thread;
-            arm_timer(0, thread->resume_tick);
+            arm_timer(SLEEP, thread->resume_tick);
         } else {
             // find where the new sleeping thread belongs
             TCB_t *node = SleepScheduleRoot;
@@ -332,9 +332,9 @@ void unsleep(void) {
     if (SleepScheduleRoot != NULL) {
         // hack to avoid missing threads that will resume soon
         if (SleepScheduleRoot->resume_tick < (get_raw_time() + 10)) {
-            arm_timer(0, get_raw_time() + 10);
+            arm_timer(SLEEP, get_raw_time() + 10);
         } else {
-            arm_timer(0, SleepScheduleRoot->resume_tick);
+            arm_timer(SLEEP, SleepScheduleRoot->resume_tick);
         }
     }
 

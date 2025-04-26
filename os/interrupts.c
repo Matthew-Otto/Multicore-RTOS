@@ -7,6 +7,7 @@
 #include "../hw/uart.h"
 #include "../hw/gpio.h"
 #include "../os/schedule.h"
+#include "../os/periodic.h"
 
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
@@ -30,6 +31,7 @@ void hardfault_handler(void);
 void pendSV_handler(void);
 void systick_handler(void);
 void timer0_interrupt(void);
+void timer1_interrupt(void);
 void uart0_handler(void);
 
 // vector table
@@ -54,7 +56,7 @@ __attribute__((used, section(".vectors"))) void (*vector_table[])(void) =
     systick_handler,        // 15 sysTick
     // Interrupts
     timer0_interrupt,       //  0 TIMER_IRQ_0
-    default_isr,            //  1 TIMER_IRQ_1
+    timer1_interrupt,       //  1 TIMER_IRQ_1
     default_isr,            //  2 TIMER_IRQ_2
     default_isr,            //  3 TIMER_IRQ_3
     default_isr,            //  4 PWM_IRQ_WRAP
@@ -211,6 +213,13 @@ void timer0_interrupt(void) {
     TIMER_INTR = 0x1;
     NVIC_ICPR = 0x1 << TIMER_IRQ_0;
     unsleep();
+}
+
+void timer1_interrupt(void) {
+    // acknowledge interrupt
+    TIMER_INTR = 0x2;
+    NVIC_ICPR = 0x1 << TIMER_IRQ_1;
+    schedule_background();
 }
 
 void uart0_handler(void) {

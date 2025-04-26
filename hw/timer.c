@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "timer.h"
 #include "../inc/rp2040.h"
 #include "../hw/sys.h"
 
@@ -12,22 +12,22 @@ void init_timer(void) {
 
     // enable timer interrupts
     TIMER_INTE = 0xF;
-    NVIC_ICPR = 0x1 << TIMER_IRQ_0;
-    NVIC_ISER = 0x1 << TIMER_IRQ_0;
+    NVIC_ICPR = (0x1 << TIMER_IRQ_0 | 0x1 << TIMER_IRQ_1);
+    NVIC_ISER = (0x1 << TIMER_IRQ_0 | 0x1 << TIMER_IRQ_1);
 }
 
-void arm_timer(uint8_t alarm_id, uint32_t alarm_value) {
+void arm_timer(timer_e alarm_id, uint32_t alarm_value) {
     switch (alarm_id) {
-        case 0:
+        case SLEEP:
             TIMER_ALARM0 = alarm_value;
             break;
-        case 1:
+        case PERIODIC:
             TIMER_ALARM1 = alarm_value;
             break;
-        case 2:
+        case TIMER2:
             TIMER_ALARM2 = alarm_value;
             break;
-        case 3:
+        case TIMER3:
             TIMER_ALARM3 = alarm_value;
             break;
     }
