@@ -68,9 +68,6 @@ int32_t dry_main(void)
     int32_t IntLoc3 = 0;
     char CharLoc = 0;
 
-    PtrGlbNext = (RecPtr) 0x20001000; // Replace with static memory if needed
-    PtrGlb = (RecPtr) 0x20001040;
-
     PtrGlb->IntComp = 0;
     PtrGlb->CharComp1 = 'A';
     PtrGlb->CharComp2 = 'B';
