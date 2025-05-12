@@ -2,9 +2,16 @@
 
 A simple real-time OS for the Raspberry Pi Pico with multicore scheduling support.
 
+This implementation is completely bare metal. It does not rely on Pico SDK or any other libraries.
+
 I do not guarantee this implementation to be completely bug free.
 
 
+
+## Dependencies
+
+* arm-none-eabi-gcc (and friends)
+* openocd
 
 
 ## References
